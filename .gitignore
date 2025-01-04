@@ -16,4 +16,4 @@ get-pip.py
 todolist.txt
 .venv
 notes.txt
-insert_*
+insert*
