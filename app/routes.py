@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for
 from . import db
-from .models import Plato, Ensalada, Combinacion
+from .models import Plato, Ensalada, Combinacion, Carbohidrato
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from colorama import Fore, Style
@@ -29,7 +29,6 @@ def process_datetime(client_timezone, datetime_obj):
     utc_iso_format = client_datetime_utc.isoformat()
     return date_local, utc_iso_format
 
-
 def register_routes(app):
     @app.route('/')
     def index():
@@ -44,11 +43,34 @@ def register_routes(app):
         }
         dia = datetime.now()
         dia_nombre = dia.strftime('%A')
-        printn(dia_nombre)
+        # printn(dia_nombre)
         dia_nombre_esp = dias_esp.get(dia_nombre, dia_nombre)
-        # dia_nombre_esp = 'jueves'
+        # dia_nombre_esp = 'viernes'
         dia_numero = dia.day
         dia_completo = f"{dia_nombre_esp} {dia_numero}"
+        
+        if dia_nombre_esp == 'martes' or dia_nombre_esp == 'viernes':
+            hoy = datetime.now().date() # <--- para aislar solo la fecha
+            combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
+            ultima_fecha_martes = combinacion_obj.fecha.date() # <--- aislar la fecha
+            if ultima_fecha_martes == hoy:
+                printn("ya se registró un plato hoy")
+            else:
+                carbohidratos_obj = Carbohidrato.query.all()
+                if not carbohidratos_obj:
+                    platos_con_carbohidratos = Plato.query.filter_by(tiene_carbos=True).all()
+                    for plato in platos_con_carbohidratos:
+                        nuevo_carbo = Carbohidrato(plato_id=plato.id)
+                        db.session.add(nuevo_carbo)
+                    db.session.commit()
+               
+                carbo_seleccionado = Carbohidrato.query.order_by(Carbohidrato.plato_id.asc()).first()
+                plato = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
+                plato.plato_id = carbo_seleccionado.plato_id
+                plato.fecha = datetime.now()
+                db.session.delete(carbo_seleccionado)
+                db.session.commit()
+                    
         combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
 
         if combinacion_obj:
@@ -75,34 +97,3 @@ def register_routes(app):
         preparacion=preparacion,
         imagen=imagen_url
     )
-
-
-    # @app.route('/usuarios')
-    # def listar_usuarios():
-    #     usuarios = Usuario.query.all()  # Obtener todos los usuarios desde la base de datos
-    #     return render_template('usuarios.html', usuarios=usuarios)  # Renderizar la plantilla
-
-    # # Ruta para agregar un nuevo usuario
-    # @app.route('/usuarios/nuevo', methods=['GET', 'POST'])
-    # def agregar_usuario():
-    #     if request.method == 'POST':
-    #         nombre = request.form['nombre']
-    #         apellido = request.form['apellido']
-    #         rut = request.form['rut']
-    #         email = request.form['email']
-    #         telefono = request.form['telefono']
-            
-    #         # Crear y guardar un nuevo usuario en la base de datos
-    #         nuevo_usuario = Usuario(nombre=nombre, apellido=apellido, rut=rut, email=email, telefono=telefono)
-    #         db.session.add(nuevo_usuario)
-    #         db.session.commit()
-            
-    #         return redirect(url_for('listar_usuarios'))  # Redirigir a la lista de usuarios
-
-    #     return render_template('nuevo_usuario.html')  # Mostrar el formulario de nuevo usuario
-
-    # # Ruta para ver los detalles de una cita
-    # @app.route('/citas/<int:cita_id>')
-    # def ver_cita(cita_id):
-    #     cita = Cita.query.get_or_404(cita_id)  # Obtener la cita por ID
-    #     return render_template('detalle_cita.html', cita=cita)
