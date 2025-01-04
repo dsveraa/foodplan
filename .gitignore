@@ -16,5 +16,4 @@ get-pip.py
 todolist.txt
 .venv
 notes.txt
-insert_days.py
-insert_platos_ensaladas.py
+insert_*
