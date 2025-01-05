@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}foodplan{% endblock %}
+
+{% block content %}
+<style>
+.detalles-content {
+    height: 0; /* Inicialmente cerrado */
+    overflow: hidden; /* Oculta el contenido que excede el área visible */
+    transition: height 0.4s ease; /* Animación suave basada en la altura */
+}
+
+
+.detalles-content.show {
+    height: auto;
+
+}
+
+</style>
+{% for dia in dias_data %}
+<div class="card mb-3" style="max-width: 540px;">
+    <div class="row g-0">
+        <div id="imagen{{ loop.index }}" class="col-md-4">
+            <img src="{{ url_for('static', filename=dia.plato_imagen) }}" class="img-fluid rounded-start" alt="{{ dia.plato_nombre }}">
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h5 class="card-title">{{ dia.dia }}</h5>
+                <div class="d-flex align-items-center justify-content-between">
+                  <p class="card-text flex-grow-1 mb-0">
+                      {{ dia.plato_nombre }} y ensalada de {{ dia.ensalada_nombre }}
+                  </p>
+                  <button class="btn btn-success detalles-btn ms-2" data-target="#detalles{{ loop.index }}" data-imagen="#imagen{{ loop.index }}">
+                    Detalles
+                  </button>
+              </div>
+              <div class="detalles-content" id="detalles{{ loop.index }}">
+                  <div class="mt-4">
+                      <h6>Ingredientes:</h6>
+                      <ul>
+                          {% for ingrediente in dia.plato_ingredientes %}
+                          <li>{{ ingrediente }}</li>
+                          {% endfor %}
+                      </ul>
+                      <h6>Preparación:</h6>
+                      <p>{{ dia.plato_preparacion }}</p>
+                  </div>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      const botonesDetalles = document.querySelectorAll('.detalles-btn');
+
+      botonesDetalles.forEach(function (boton) {
+          boton.addEventListener('click', function (e) {
+              e.preventDefault(); // Previene el comportamiento de desplazamiento por defecto
+              const targetSelector = boton.getAttribute('data-target');
+              const target = document.querySelector(targetSelector);
+
+              const imagenSelector = boton.getAttribute('data-imagen');
+              const imagenAnchor = document.querySelector(imagenSelector);
+
+              // Cerrar cualquier contenido actualmente abierto
+              const abiertos = document.querySelectorAll('.detalles-content.show');
+              abiertos.forEach(function (abierto) {
+                  if (abierto !== target) {
+                      abierto.style.height = abierto.scrollHeight + 'px'; // Fija la altura actual
+                      setTimeout(() => {
+                          abierto.style.height = '0px'; // Colapsa
+                          abierto.classList.remove('show');
+                      }, 10);
+                  }
+              });
+
+              // Manejar el contenedor actual
+              if (target.classList.contains('show')) {
+                  // Si está abierto: colapsa
+                  target.style.height = target.scrollHeight + 'px'; // Fija la altura actual
+                  setTimeout(() => {
+                      target.style.height = '0px'; // Colapsa
+                  }, 10);
+                  target.classList.remove('show');
+              } else {
+                  // Si está cerrado: expande
+                  target.style.height = '0px'; // Asegura estado inicial
+                  target.classList.add('show');
+                  setTimeout(() => {
+                      target.style.height = target.scrollHeight + 'px'; // Expande
+                  }, 10);
+              }
+
+              // Limpiar el estilo de altura después de la transición
+              target.addEventListener(
+                  'transitionend',
+                  function () {
+                      if (!target.classList.contains('show')) {
+                          target.style.height = ''; // Resetea altura cuando está colapsado
+                      }
+                  },
+                  { once: true } // Se ejecuta una vez por evento
+              );
+
+              // Esperar a que la animación termine y luego hacer scroll hacia la imagen
+              setTimeout(() => {
+                // Obtiene la posición de la imagen con respecto al documento
+                const rect = imagenAnchor.getBoundingClientRect();
+                const offset = 12; // Margen superior de 20px, ajusta según sea necesario
+                
+                window.scrollTo({
+                    top: rect.top + window.scrollY - offset, // Desplazamiento calculado
+                    behavior: 'smooth' // Desplazamiento suave
+                });
+            }, 500);
+          });
+      });
+  });
+</script>
+
+
+{% endblock %}
