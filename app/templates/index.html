@@ -4,6 +4,41 @@
 
 {% block content %}
 
+<div class="card mb-3" style="max-width: 540px;">
+    <div class="row g-0">
+        <div id="imagen" class="col-md-4">
+            <img src="{{ imagen }}" class="img-fluid rounded-start" alt="imagen del plato">
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ dia }}</h5>
+                <div class="d-flex align-items-center justify-content-between">
+                  <p class="card-text flex-grow-1 mb-0">
+                      {{ plato }} y ensalada de {{ ensalada }}
+                  </p>
+                </div>
+                <div class="detalles-content" id="detalles">
+                    <div class="mt-4">
+                        <h6>Ingredientes:</h6>
+                        <ul>
+                            {% for ingrediente in ingredientes %}
+                            <li>{{ ingrediente }}</li>
+                            {% endfor %}
+                        </ul>
+                        <h6>Preparación:</h6>
+                        <p class="text-dark">{{ preparacion }}</p>
+                    </div>
+                    <a href="/week" class="btn btn-success">
+                      Ver toda la semana
+                    </a>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
 <div class="card shadow" style="width: 18rem;">
     <img class="card-img-top" src="{{ imagen }}" alt="imagen del plato">
     <div class="card-body">
@@ -19,8 +54,4 @@
         <p class="text-dark">{{ preparacion }}</p>
         <div class="text-center"><a href="/week">Ver toda la semana</a></div>
     </div>
-    
 </div>
-
-{% endblock %}
-
