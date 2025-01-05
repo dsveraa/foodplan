@@ -5,32 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}foodplan{% endblock %}</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 </head>
 <style>
 body {
-    background-color:  #fdebd0  ;
+    background-color:  #fff6e8 ;
 }
+
+.andika-regular {
+  font-family: "Andika", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.andika-bold {
+  font-family: "Andika", serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.andika-regular-italic {
+  font-family: "Andika", serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.andika-bold-italic {
+  font-family: "Andika", serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
 </style>
 </head>
 <body class="d-flex justify-content-center align-items-center">
     <div class="container my-4">
-        {# <div class="d-flex my-4 justify-content-between">
-            <div class="d-flex justify-content-start gap-3">
-                <a href="/">Home</a>
-                {% if session.get("user_id") and user_has_records %}
-                <a href="/release">Current password</a>
-                {% endif %}
-            </div>
-            {% if session.get("user_id") %}
-            <div class="d-flex gap-3">
-            <p class="my-0">Hi, <b>{{ user }}</b>.</p>
-            <a href="/logout">Log out</a>
-            </div>
-            {% endif %}
-
-        </div> #}
         <div class="d-flex flex-column align-items-center">
-            <h1><a class="text-warning mb-2 text-decoration-none" href="/">foodplan</a></h1>
+            <h1><a class="text-warning mb-2 text-decoration-none andika-regular-italic" href="/">foodplan</a></h1>
             {% block content %}
             {% endblock %}
         </div>

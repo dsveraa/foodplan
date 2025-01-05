@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<div class="card mb-3" style="max-width: 540px;">
+<div class="card my-3" style="max-width: 540px;">
     <div class="row g-0">
         <div id="imagen" class="col-md-4">
             <img src="{{ imagen }}" class="img-fluid rounded-start" alt="imagen del plato">
@@ -38,20 +38,3 @@
 </div>
 
 {% endblock %}
-
-<div class="card shadow" style="width: 18rem;">
-    <img class="card-img-top" src="{{ imagen }}" alt="imagen del plato">
-    <div class="card-body">
-        <h1 class="text-success text-center">{{ dia }}</h1>
-        <p class="text-dark"><b>{{ plato }}</b> y ensalada de <b>{{ ensalada }}</b></p>
-        <p><b>Ingredientes:</b></p>
-        <ul class="text-dark">
-        {% for ingrediente in ingredientes %}
-            <li>{{ ingrediente }}</li>
-        {% endfor %}
-        </ul>
-        <p><b>Preparación:</b></p>
-        <p class="text-dark">{{ preparacion }}</p>
-        <div class="text-center"><a href="/week">Ver toda la semana</a></div>
-    </div>
-</div>

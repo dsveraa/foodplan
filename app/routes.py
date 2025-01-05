@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for
 from . import db
 from .models import Plato, Combinacion, Carbohidrato
-from datetime import datetime, date
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from colorama import Fore, Style
 from pytz import timezone, UTC
@@ -31,13 +31,24 @@ def printn(message):
 
 def register_routes(app):
     @app.route('/week')
+
     def week():
+        today = datetime.now()
+        dias_semana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+        inicio_semana = today - timedelta(days=today.weekday() + 1) if today.weekday() != 6 else today
+        dias_con_fechas = []
+
+        for i, dia in enumerate(dias_semana):
+            fecha = inicio_semana + timedelta(days=i)
+            dias_con_fechas.append({"dia": dia, "fecha": fecha.day})
+        
         combinaciones_obj = Combinacion.query.order_by(Combinacion.id).all()
         
         dias_data = []
-        for combinacion in combinaciones_obj:
+        for i, combinacion in enumerate(combinaciones_obj):
             dia_info = {
-                "dia": combinacion.dia,
+                "dia": dias_con_fechas[i]["dia"],  
+                "fecha": dias_con_fechas[i]["fecha"], 
                 "plato_nombre": combinacion.platos.nombre if combinacion.platos else None,
                 "ensalada_nombre": combinacion.ensaladas.nombre if combinacion.ensaladas else None,
                 "plato_imagen": combinacion.platos.imagen if combinacion.platos else None,
@@ -47,6 +58,7 @@ def register_routes(app):
             dias_data.append(dia_info)
         
         return render_template("week.html", dias_data=dias_data)
+
     
     @app.route('/')
     def index():
