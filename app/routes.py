@@ -47,7 +47,6 @@ def register_routes(app):
             dias_data.append(dia_info)
         
         return render_template("week.html", dias_data=dias_data)
-
     
     @app.route('/')
     def index():
@@ -68,12 +67,12 @@ def register_routes(app):
         dia_numero = dia.day
         dia_completo = f"{dia_nombre_esp} {dia_numero}"
         
-        if dia_nombre_esp == 'martes' or dia_nombre_esp == 'viernes':
+        if dia_nombre_esp == 'domingo':
             hoy = datetime.now().date() # <--- para aislar solo la fecha
-            combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
-            ultima_fecha_martes = combinacion_obj.fecha.date() # <--- aislar la fecha
-            if ultima_fecha_martes == hoy:
-                printn("ya se registró un plato hoy")
+            domingo_obj = Combinacion.query.filter_by(dia='domingo').first()
+            ultima_fecha_domingo = domingo_obj.fecha.date() # <--- aislar la fecha
+            if ultima_fecha_domingo == hoy:
+                printn("ya se registraron los platos para martes y viernes")
             else:
                 carbohidratos_obj = Carbohidrato.query.all()
                 if not carbohidratos_obj:
@@ -82,12 +81,17 @@ def register_routes(app):
                         nuevo_carbo = Carbohidrato(plato_id=plato.id)
                         db.session.add(nuevo_carbo)
                     db.session.commit()
-               
-                carbo_seleccionado = Carbohidrato.query.order_by(Carbohidrato.plato_id.asc()).first()
-                plato = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
-                plato.plato_id = carbo_seleccionado.plato_id
-                plato.fecha = datetime.now()
-                db.session.delete(carbo_seleccionado)
+
+                dias = ['martes', 'viernes']
+
+                for dia in dias:
+                    carbo_seleccionado = Carbohidrato.query.order_by(Carbohidrato.plato_id.asc()).first()
+                    plato = Combinacion.query.filter_by(dia=dia).first()
+                    plato.plato_id = carbo_seleccionado.plato_id
+                    db.session.delete(carbo_seleccionado)
+                    db.session.commit()
+
+                domingo_obj.fecha = datetime.now()
                 db.session.commit()
                     
         combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
