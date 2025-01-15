@@ -46,13 +46,23 @@ def register_routes(app):
         
         dias_data = []
         for i, combinacion in enumerate(combinaciones_obj):
+            plato_ingredientes = []
+    
+            if combinacion.platos:
+                for plato_ingrediente in combinacion.platos.plato_ingredientes:
+                    ingrediente = plato_ingrediente.ingredientes
+                    plato_ingredientes.append({
+                        "nombre": ingrediente.nombre,
+                        "cantidad": plato_ingrediente.cantidad,
+                        "unidad": plato_ingrediente.unidades.unidad
+                    })
             dia_info = {
                 "dia": dias_con_fechas[i]["dia"],  
                 "fecha": dias_con_fechas[i]["fecha"], 
                 "plato_nombre": combinacion.platos.nombre if combinacion.platos else None,
                 "ensalada_nombre": combinacion.ensaladas.nombre if combinacion.ensaladas else None,
                 "plato_imagen": combinacion.platos.imagen if combinacion.platos else None,
-                "plato_ingredientes": combinacion.platos.ingredientes if combinacion.platos else None,
+                "plato_ingredientes": plato_ingredientes,
                 "plato_preparacion": combinacion.platos.preparacion if combinacion.platos else None,
             }
             dias_data.append(dia_info)
@@ -111,7 +121,7 @@ def register_routes(app):
         if combinacion_obj:
             plato_nombre = combinacion_obj.platos.nombre if combinacion_obj.platos else None
             ensalada_nombre = combinacion_obj.ensaladas.nombre if combinacion_obj.ensaladas else None
-            ingredientes = combinacion_obj.platos.ingredientes if combinacion_obj.platos else []
+            ingredientes = [pi.ingredientes for pi in combinacion_obj.platos.plato_ingredientes] if combinacion_obj.platos else []
             preparacion = combinacion_obj.platos.preparacion if combinacion_obj.platos else None
             imagen_relativa = combinacion_obj.platos.imagen if combinacion_obj.platos else None
 

@@ -8,11 +8,11 @@ class Plato(db.Model):
     id = Column(Integer, primary_key=True)
     tiene_carbos = Column(Boolean, default=False)
     nombre = Column(String(100), nullable=False)
-    ingredientes = Column(JSON, nullable=True)
     preparacion = Column(Text, nullable=True)
     imagen = Column(String, nullable=True)
 
     combinaciones = relationship("Combinacion", back_populates="platos")
+    plato_ingredientes = relationship("PlatoIngrediente", back_populates="platos")
 
 class Ensalada(db.Model):
     __tablename__ = 'ensaladas'
@@ -40,3 +40,32 @@ class Carbohidrato(db.Model):
     id = Column(Integer, primary_key=True)
     plato_id = Column(Integer, ForeignKey('platos.id'), nullable=True)
     
+class Ingrediente(db.Model):
+    __tablename__ = 'ingredientes'
+
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(50), nullable=True)
+
+    plato_ingredientes = relationship('PlatoIngrediente', back_populates='ingredientes')
+
+class PlatoIngrediente(db.Model):
+    __tablename__ = 'plato_ingredientes'
+
+    id = Column(Integer, primary_key=True)
+    plato_id = Column(Integer, ForeignKey('platos.id'), nullable=False)
+    ingrediente_id = Column(Integer, ForeignKey('ingredientes.id'), nullable=False)
+    cantidad = Column(Integer)
+    unidad_id = Column(Integer, ForeignKey('unidades.id'), nullable=True)
+
+    platos = relationship("Plato", back_populates="plato_ingredientes")
+    ingredientes = relationship('Ingrediente', back_populates="plato_ingredientes")
+    unidades = relationship("Unidad", back_populates="plato_ingredientes")
+
+
+class Unidad(db.Model):
+    __tablename__ = 'unidades'
+
+    id = Column(Integer, primary_key=True)
+    unidad = Column(String(10), nullable=True)
+
+    plato_ingredientes = relationship("PlatoIngrediente", back_populates="unidades")
