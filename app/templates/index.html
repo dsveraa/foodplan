@@ -22,7 +22,7 @@
                         <h6>Ingredientes:</h6>
                         <ul>
                             {% for ingrediente in ingredientes %}
-                            <li>{{ ingrediente }}</li>
+                            <li>{{ ingrediente.cantidad }} {{ ingrediente.unidad }} de {{ ingrediente.nombre }}</li>
                             {% endfor %}
                         </ul>
                         <h6>Preparación:</h6>

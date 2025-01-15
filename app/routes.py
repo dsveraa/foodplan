@@ -121,15 +121,25 @@ def register_routes(app):
         if combinacion_obj:
             plato_nombre = combinacion_obj.platos.nombre if combinacion_obj.platos else None
             ensalada_nombre = combinacion_obj.ensaladas.nombre if combinacion_obj.ensaladas else None
-            ingredientes = [pi.ingredientes for pi in combinacion_obj.platos.plato_ingredientes] if combinacion_obj.platos else []
+
+            ingredientes = []
+
+            if combinacion_obj.platos:
+                for plato_ingrediente in combinacion_obj.platos.plato_ingredientes:
+                    ingredientes.append({
+                        "nombre": plato_ingrediente.ingredientes.nombre,
+                        "cantidad": plato_ingrediente.cantidad,         
+                        "unidad": plato_ingrediente.unidades.unidad     
+                    })
+
             preparacion = combinacion_obj.platos.preparacion if combinacion_obj.platos else None
             imagen_relativa = combinacion_obj.platos.imagen if combinacion_obj.platos else None
-
             imagen_url = url_for('static', filename=imagen_relativa) if imagen_relativa else None
+
         else:
             plato_nombre = None
             ensalada_nombre = None
-            ingredientes = []
+            ingredientes = None
             preparacion = None
             imagen_url = None
 
