@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}foodplan{% endblock %}
+
+{% block content %}
+<div class="card my-3" style="max-width: 540px; min-width: 350px">
+    <div class="row g-0">
+        <div class="col-md-12">
+            <div class="card-body">
+                <h5 class="card-title text-success">Ingredientes totales:</h5>
+                <div class="mt-4">
+                    <ul>
+                        {% for ingrediente in resultados %}
+                        <li>{{ ingrediente.cantidad }}
+                            {% if ingrediente.unidad != "unidad" %} {{ ingrediente.unidad }}{% if ingrediente.cantidad >
+                            1 and ingrediente.cantidad < 20 and ingrediente.unidad %}{% if
+                                ingrediente.unidad.endswith(('a', 'e' , 'i' , 'o' , 'u' ))%}s{% else %}es {% endif %} {%
+                                endif %} de {% endif %} {{ ingrediente.ingrediente }}</li>
+                                {% endfor %}
+                    </ul>
+                </div>
+                <a href="/week" class="btn btn-success">
+                    Ver toda la semana
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

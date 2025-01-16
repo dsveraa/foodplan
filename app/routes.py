@@ -1,37 +1,59 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify
 from . import db
-from .models import Plato, Combinacion, Carbohidrato
+from .models import Plato, Combinacion, Carbohidrato, PlatoIngrediente
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-from colorama import Fore, Style
-from pytz import timezone, UTC
-import inspect
-import random
-import pytz
+import json
 
-colors = [Fore.CYAN, Fore.GREEN]
-last_color = None
-
-def printn(message):
-    global last_color
-    frame = inspect.currentframe()
-    info = inspect.getframeinfo(frame.f_back)
-    new_color = random.choice([color for color in colors if color != last_color])
-    last_color = new_color
-    print(f"{new_color}[{info.lineno - 1}] {message}{Style.RESET_ALL}")
-
-# def process_datetime(client_timezone, datetime_obj):
-#     client_tz = pytz.timezone(client_timezone)
-#     client_datetime_tz = client_tz.localize(datetime_obj)
-#     client_datetime_utc = client_datetime_tz.astimezone(pytz.utc)   
-#     client_datetime_local = client_datetime_utc.astimezone(client_tz)
-#     date_local=client_datetime_local.isoformat()
-#     utc_iso_format = client_datetime_utc.isoformat()
-#     return date_local, utc_iso_format
+from .utils.debugging import printn
 
 def register_routes(app):
-    @app.route('/week')
+    @app.route('/ingredients')
+    def ingredients():
+        '''
+        - Iterar PlatoIngrediente
+        - Si plato está en Combinacion, añadir ingrediente a lista_ingredientes considerando 'ingrediente', 'cantidad', 'unidad'.
+        
+        - Iterar lista_ingredientes
+        - Agregar a resultados nuevos ingredientes
+        - Si el ingrediente ya está en resultados, sumar cantidades.
+        '''
+        combinaciones = Combinacion.query.order_by(Combinacion.id).all()
+        plato_ingredientes = PlatoIngrediente.query.order_by(PlatoIngrediente.plato_id).all()
 
+        lista_ingredientes = []
+
+        for plato_ingrediente in plato_ingredientes:
+            for combinacion in combinaciones:
+                if plato_ingrediente.plato_id == combinacion.plato_id:
+                    lista_ingredientes.append({
+                        'ingrediente': plato_ingrediente.ingredientes.nombre,
+                        'cantidad': plato_ingrediente.cantidad,
+                        'unidad': plato_ingrediente.unidades.unidad
+                    })
+                    break
+        
+        resultados = []
+
+        for ingrediente in lista_ingredientes:
+            encontrado = False
+
+            for resultado in resultados:
+                if resultado['ingrediente'] == ingrediente['ingrediente'] and resultado['unidad'] == ingrediente['unidad']:
+                    resultado['cantidad'] += ingrediente['cantidad']
+                    encontrado = True
+                    break
+
+            if not encontrado:
+                resultados.append({
+                    'ingrediente': ingrediente['ingrediente'],
+                    'cantidad': ingrediente['cantidad'],
+                    'unidad': ingrediente['unidad']
+                })
+
+        return render_template("total_ingredients.html", resultados=resultados)
+
+    @app.route('/week')
     def week():
         today = datetime.now()
         dias_semana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
