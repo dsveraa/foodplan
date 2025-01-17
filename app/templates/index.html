@@ -21,7 +21,13 @@
                     <h6>Ingredientes:</h6>
                     <ul>
                         {% for ingrediente in ingredientes %}
-                        <li>{{ ingrediente.cantidad }} {{ ingrediente.unidad }} de {{ ingrediente.nombre }}</li>
+                        <li>{{ ingrediente.cantidad }}
+                            {% if ingrediente.unidad != 'unidad' %} 
+                                {{ ingrediente.unidad }}{% if ingrediente.cantidad > 1 and ingrediente.cantidad < 20 %}{% if ingrediente.unidad.endswith(('a','e','i','o','u'))%}s
+                                {% else %}es
+                                    {% endif %}
+                                {% endif %} de
+                            {% endif %} {{ ingrediente.nombre }}</li>
                         {% endfor %}
                     </ul>
                     <h6>Preparación:</h6>

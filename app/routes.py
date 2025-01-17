@@ -50,6 +50,8 @@ def register_routes(app):
                     'cantidad': ingrediente['cantidad'],
                     'unidad': ingrediente['unidad']
                 })
+        
+        resultados.sort(key=lambda ing: ing["unidad"] in ['cda', 'poco', 'chorrito', 'diente', 'cdita'])
 
         return render_template("total_ingredients.html", resultados=resultados)
 

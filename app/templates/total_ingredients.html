@@ -11,12 +11,23 @@
                 <div class="mt-4">
                     <ul>
                         {% for ingrediente in resultados %}
-                        <li>{{ ingrediente.cantidad }}
-                            {% if ingrediente.unidad != "unidad" %} {{ ingrediente.unidad }}{% if ingrediente.cantidad >
-                            1 and ingrediente.cantidad < 20 and ingrediente.unidad %}{% if
-                                ingrediente.unidad.endswith(('a', 'e' , 'i' , 'o' , 'u' ))%}s{% else %}es {% endif %} {%
-                                endif %} de {% endif %} {{ ingrediente.ingrediente }}</li>
-                                {% endfor %}
+                            <li>
+                                {% if ingrediente.unidad in ['cda', 'poco', 'chorrito', 'diente', 'cdita'] %}
+                                    {{ ingrediente.ingrediente | capitalize }}
+                                {% else %}
+                                    {{ ingrediente.cantidad }}
+
+                                    {% if ingrediente.unidad != "unidad" %}
+                                        {{ ingrediente.unidad }}{% if ingrediente.cantidad > 1 and ingrediente.cantidad < 20 and ingrediente.unidad %}{% if ingrediente.unidad[-1] in ['a', 'e', 'i', 'o', 'u'] %}s{% else %}es{% endif %}{% endif %}
+
+                                        de
+                                    {% endif %}
+
+                                    {{ ingrediente.ingrediente }}
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+
                     </ul>
                 </div>
                 <a href="/week" class="btn btn-success">
@@ -27,3 +38,20 @@
     </div>
 </div>
 {% endblock %}
+
+
+{# 
+
+si la unidad no es 'cda', 'poco', 'chorrito', 'diente', 'cdita':
+    mostrar cantidad
+    
+    si la unidad no es 'unidad':
+        mostrar unidad
+
+        si hay unidad y la cantidad es mayor a 1 y menor a 20:
+            si la unidad termina con vocal:
+                agregar 's'
+            sino, agregar 'es'
+    mostrar 'de'
+
+ #}
