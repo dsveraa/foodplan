@@ -4,6 +4,7 @@ from .models import Plato, Combinacion, Carbohidrato, PlatoIngrediente
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
+import pprint
 
 from .utils.debugging import printn
 
@@ -52,6 +53,8 @@ def register_routes(app):
                 })
         
         resultados.sort(key=lambda ing: ing["unidad"] in ['cda', 'poco', 'chorrito', 'diente', 'cdita'])
+
+        pprint.pprint(resultados)
 
         return render_template("total_ingredients.html", resultados=resultados)
 

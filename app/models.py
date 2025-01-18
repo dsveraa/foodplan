@@ -56,6 +56,7 @@ class PlatoIngrediente(db.Model):
     ingrediente_id = Column(Integer, ForeignKey('ingredientes.id'), nullable=False)
     cantidad = Column(Integer)
     unidad_id = Column(Integer, ForeignKey('unidades.id'), nullable=True)
+    disponible = Column(Boolean, default=False, nullable=False)
 
     platos = relationship("Plato", back_populates="plato_ingredientes")
     ingredientes = relationship('Ingrediente', back_populates="plato_ingredientes")
