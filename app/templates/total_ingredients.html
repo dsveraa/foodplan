@@ -3,31 +3,40 @@
 {% block title %}foodplan{% endblock %}
 
 {% block content %}
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
 <div class="card my-3" style="max-width: 540px; min-width: 350px">
     <div class="row g-0">
         <div class="col-md-12">
             <div class="card-body">
                 <h5 class="card-title text-success">Ingredientes totales:</h5>
                 <div class="mt-4">
-                    <ul>
-                        {% for ingrediente in resultados %}
-                            <li>
-                                {% if ingrediente.unidad in ['cda', 'poco', 'chorrito', 'diente', 'cdita'] %}
-                                    {{ ingrediente.ingrediente | capitalize }}
-                                {% else %}
-                                    {{ ingrediente.cantidad }}
-
-                                    {% if ingrediente.unidad != "unidad" %}
-                                        {{ ingrediente.unidad }}{% if ingrediente.cantidad > 1 and ingrediente.cantidad < 20 and ingrediente.unidad %}{% if ingrediente.unidad[-1] in ['a', 'e', 'i', 'o', 'u'] %}s{% else %}es{% endif %}{% endif %}
-
-                                        de
+                    <ul class="list-unstyled">
+                        {% for item in resultados %}
+                        <li>
+                            <div class="d-flex">
+                                <div id="{{ item.id }}" class="cursor-pointer me-1" onclick="enviarId(this.id)">
+                                    {% if item.disponibilidad == True %}
+                                    <iconify-icon icon="humbleicons:check-circle" width="24" height="24"></iconify-icon>
+                                    {% else %}
+                                    <iconify-icon icon="humbleicons:circle" width="24" height="24"></iconify-icon>
                                     {% endif %}
+                                </div>
+                                <div>
+                                    {% if item.unidad in ['cda', 'poco', 'chorrito', 'diente', 'cdita'] %}
+                                    {{ item.ingrediente | capitalize }}
+                                    {% else %}
+                                    {{ item.cantidad }}
 
-                                    {{ ingrediente.ingrediente }}
-                                {% endif %}
-                            </li>
+                                    {% if item.unidad != "unidad" %}
+                                    {{ item.unidad }}{% if item.cantidad > 1 and item.cantidad < 20 %}{% if item.unidad[-1] in ['a', 'e' , 'i' , 'o' , 'u' ] %}s{% else %}es{% endif %} {% endif %} de {% endif %} {{ item.ingrediente }} {% endif %}
+                                </div>
+                            </div>
+                        </li>
                         {% endfor %}
-
                     </ul>
                 </div>
                 <a href="/week" class="btn btn-success">
@@ -37,21 +46,60 @@
         </div>
     </div>
 </div>
+
+<script>
+    function enviarId(id) {
+        const span = document.getElementById(id)
+        const icon = span.querySelector('iconify-icon')
+
+        const iconoOriginal = icon.getAttribute('icon')
+        const nuevoIcono = iconoOriginal === 'humbleicons:check-circle' ? 'humbleicons:circle' : 'humbleicons:check-circle'
+
+        // Cambiar el icono inmediatamente
+        icon.setAttribute('icon', nuevoIcono)
+
+        fetch(`/cambiar_estado/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    // Si hubo un error, revertir el icono al estado original
+                    icon.setAttribute('icon', iconoOriginal)
+                    console.error(data.error)
+                }
+            })
+            .catch(error => {
+                // Si la solicitud falla, revertir el icono al estado original
+                icon.setAttribute('icon', iconoOriginal)
+                console.error('Error:', error)
+            })
+    }
+
+
+</script>
+
 {% endblock %}
 
 
-{# 
+{#
 
-si la unidad no es 'cda', 'poco', 'chorrito', 'diente', 'cdita':
+si la unidad es 'cda', 'poco', 'chorrito', 'diente', 'cdita':
+    mostrar ingrediente
+
+sino:
     mostrar cantidad
-    
     si la unidad no es 'unidad':
         mostrar unidad
-
-        si hay unidad y la cantidad es mayor a 1 y menor a 20:
+        si la cantidad es mayor a 1 y menor a 20:
             si la unidad termina con vocal:
                 agregar 's'
-            sino, agregar 'es'
-    mostrar 'de'
+            sino:
+                agregar 'es'
+            mostrar 'de'
+        mostrar ingrediente
 
- #}
+#}

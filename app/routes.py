@@ -13,7 +13,7 @@ def register_routes(app):
     def ingredients():
         '''
         - Iterar PlatoIngrediente
-        - Si plato está en Combinacion, añadir ingrediente a lista_ingredientes considerando 'ingrediente', 'cantidad', 'unidad'.
+        - Si plato está en Combinacion, añadir ingrediente a lista_ingredientes considerando 'ingrediente', 'cantidad', 'unidad' y disponibilidad.
         
         - Iterar lista_ingredientes
         - Agregar a resultados nuevos ingredientes
@@ -28,9 +28,11 @@ def register_routes(app):
             for combinacion in combinaciones:
                 if plato_ingrediente.plato_id == combinacion.plato_id:
                     lista_ingredientes.append({
+                        'id': plato_ingrediente.id,
                         'ingrediente': plato_ingrediente.ingredientes.nombre,
                         'cantidad': plato_ingrediente.cantidad,
-                        'unidad': plato_ingrediente.unidades.unidad
+                        'unidad': plato_ingrediente.unidades.unidad,
+                        'disponibilidad': plato_ingrediente.disponible
                     })
                     break
         
@@ -47,16 +49,30 @@ def register_routes(app):
 
             if not encontrado:
                 resultados.append({
+                    'id': ingrediente['id'],
                     'ingrediente': ingrediente['ingrediente'],
                     'cantidad': ingrediente['cantidad'],
-                    'unidad': ingrediente['unidad']
+                    'unidad': ingrediente['unidad'],
+                    'disponibilidad': ingrediente['disponibilidad']
                 })
         
-        resultados.sort(key=lambda ing: ing["unidad"] in ['cda', 'poco', 'chorrito', 'diente', 'cdita'])
+        resultados.sort(key=lambda ing: (ing["unidad"] in ['cda', 'poco', 'chorrito', 'diente', 'cdita'], ing["ingrediente"]))
 
         pprint.pprint(resultados)
 
         return render_template("total_ingredients.html", resultados=resultados)
+    
+    @app.route('/cambiar_estado/<item_id>', methods=["POST"])
+    def cambiar_estado(item_id):
+        item_obj = PlatoIngrediente.query.filter_by(id=item_id).first()
+        
+        if item_obj:
+            print(f"Changing state for item with id: {item_id}, current state: {item_obj.disponible}")
+            item_obj.disponible = not item_obj.disponible
+            db.session.commit()
+            return jsonify({"success": True, "new_state": item_obj.disponible})
+        return jsonify({"success": False, "error": "Item no encontrado"}), 404
+
 
     @app.route('/week')
     def week():
