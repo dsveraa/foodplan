@@ -1,14 +1,56 @@
 from flask import render_template, request, redirect, url_for, jsonify
 from . import db
-from .models import Plato, Combinacion, Carbohidrato, PlatoIngrediente
+from .models import Plato, Ensalada, Combinacion, Carbohidrato, PlatoIngrediente
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import pprint
 
 from .utils.debugging import printn
+from .utils.get_static_url import get_static_url as gsu
 
 def register_routes(app):
+    @app.route('/change_combination', methods=['POST'])
+    def change_combination():
+        '''
+        - recibir id de plato
+        - recibir id de ensalada
+        - recibir id de día
+        - modificar columnas de Combinacion según esos datos
+        '''
+        dia_id = request.form.get('dia_id')
+        plato_id = request.form.get('plato_id')
+        ensalada_id = request.form.get('ensalada_id')
+
+        combinacion = Combinacion.query.get(dia_id)
+
+        combinacion.plato_id = plato_id
+        combinacion.ensalada_id = ensalada_id
+        db.session.commit()
+
+        return redirect("week")
+        return jsonify({'message': f'Nuevo plato asignado al día {combinacion.dia}','plato': combinacion.platos.nombre}), 200
+
+    @app.route('/combination/<combinacion_id>')
+    def combination(combinacion_id):
+        '''
+        - listar platos
+        - listar ensaladas
+        - obtener combinación por id
+        - seleccionar plato y ensalada
+        - aplicar a combinación por id (/change_combination, methods=[POST])
+        '''
+        platos_obj = Plato.query.order_by(Plato.id).all()
+        ensaladas_obj = Ensalada.query.order_by(Ensalada.id).all()
+        combinacion_obj = Combinacion.query.get(combinacion_id)
+
+        platos = [{'id': plato.id, 'nombre': plato.nombre} for plato in platos_obj]
+        ensaladas = [{'id': ensalada.id, 'nombre': ensalada.nombre} for ensalada in ensaladas_obj]
+        combinacion = {'id': combinacion_obj.id, 'plato': combinacion_obj.platos.nombre, 'ensalada': combinacion_obj.ensaladas.nombre, 'dia': combinacion_obj.dia, 'imagen': gsu(combinacion_obj.platos.imagen), 'plato_actual_id': combinacion_obj.plato_id, 'ensalada_actual_id': combinacion_obj.ensalada_id }
+
+        return render_template("change_combination.html", platos=platos, ensaladas=ensaladas, combinacion=combinacion)
+        # return jsonify({'platos': platos, 'ensaladas': ensaladas, 'combinacion': combinacion}), 200
+    
     @app.route('/ingredients')
     def ingredients():
         '''
@@ -104,13 +146,15 @@ def register_routes(app):
                 "fecha": dias_con_fechas[i]["fecha"], 
                 "plato_nombre": combinacion.platos.nombre if combinacion.platos else None,
                 "ensalada_nombre": combinacion.ensaladas.nombre if combinacion.ensaladas else None,
-                "plato_imagen": combinacion.platos.imagen if combinacion.platos else None,
+                "plato_imagen": gsu(combinacion.platos.imagen) if combinacion.platos else None,
                 "plato_ingredientes": plato_ingredientes,
                 "plato_preparacion": combinacion.platos.preparacion if combinacion.platos else None,
+                "id": combinacion.id
             }
             dias_data.append(dia_info)
         
         return render_template("week.html", dias_data=dias_data)
+        # return jsonify({"dias_data": dias_data})
 
     
     @app.route('/')
@@ -176,8 +220,7 @@ def register_routes(app):
                     })
 
             preparacion = combinacion_obj.platos.preparacion if combinacion_obj.platos else None
-            imagen_relativa = combinacion_obj.platos.imagen if combinacion_obj.platos else None
-            imagen_url = url_for('static', filename=imagen_relativa) if imagen_relativa else None
+            imagen_url = gsu(combinacion_obj.platos.imagen)
 
         else:
             plato_nombre = None

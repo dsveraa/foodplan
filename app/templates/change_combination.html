@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}foodplan{% endblock %}
+
+{% block content %}
+
+<div class="card my-3" style="max-width: 540px;">
+    <div class="row g-0">
+        <div id="imagen" class="col-md-4">
+            <img src="{{ combinacion.imagen }}" class="img-fluid rounded-start" alt="imagen del plato">
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h5 class="card-title text-success">Editar día {{ combinacion.dia }}</h5>
+                <form class="d-flex flex-column gap-2" action="/change_combination" method="POST">
+                    <input type="hidden" name="dia_id" value="{{ combinacion.id }}">
+                    <label for="plato">Plato:</label>
+                    <select class="form-control" name="plato_id" id="plato">
+                        {% for plato in platos %}
+                            <option value="{{ plato.id }}" {% if plato.id == combinacion.plato_actual_id %}selected{% endif %}>{{ plato.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="ensalada">Ensalada:</label>
+                    <select class="form-control" name="ensalada_id" id="ensalada">
+                        {% for ensalada in ensaladas %}
+                            <option value="{{ ensalada.id }}" {% if ensalada.id == combinacion.ensalada_actual_id %}selected{% endif %}>{{ ensalada.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-success" type="submit">Aplicar</button>
+                </form>
+                <div class="d-flex flex-column mt-2">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

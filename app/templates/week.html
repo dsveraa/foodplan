@@ -8,7 +8,7 @@
     <div class="card mb-3" style="max-width: 540px;">
         <div class="row g-0">
             <div id="imagen{{ loop.index }}" class="col-md-4">
-                <img src="{{ url_for('static', filename=dia.plato_imagen) }}" class="img-fluid rounded-start"
+                <img src="{{ dia.plato_imagen }}" class="img-fluid rounded-start"
                     alt="{{ dia.plato_nombre }}">
             </div>
             <div class="col-md-8">
@@ -22,6 +22,9 @@
                             data-imagen="#imagen{{ loop.index }}">
                             Detalles
                         </button>
+                        <a href="/combination/{{ dia.id }}" class="btn btn-warning ms-2" >
+                            Editar
+                        </a>
                     </div>
                     <div class="detalles-content" id="detalles{{ loop.index }}">
                         <div class="mt-4">
