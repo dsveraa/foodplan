@@ -58,7 +58,7 @@ def register_routes(app):
         
         resultados.sort(key=lambda ing: (ing["unidad"] in ['cda', 'poco', 'chorrito', 'diente', 'cdita'], ing["ingrediente"]))
 
-        pprint.pprint(resultados)
+        # pprint.pprint(resultados)
 
         return render_template("total_ingredients.html", resultados=resultados)
     
@@ -125,10 +125,10 @@ def register_routes(app):
             'Sunday': 'domingo'
         }
         dia = datetime.now()
+        # dia = datetime(2025, 1, 19, 0, 0, 0)
         dia_nombre = dia.strftime('%A')
-        # printn(dia_nombre)
         dia_nombre_esp = dias_esp.get(dia_nombre, dia_nombre)
-        # dia_nombre_esp = 'viernes'
+        # dia_nombre_esp = 'domingo'
         dia_numero = dia.day
         dia_completo = f"{dia_nombre_esp} {dia_numero}"
         

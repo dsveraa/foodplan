@@ -12,7 +12,7 @@
     <div class="row g-0">
         <div class="col-md-12">
             <div class="card-body">
-                <h5 class="card-title text-success">Ingredientes totales:</h5>
+                <h5 class="card-title text-success">Total ingredientes:</h5>
                 <div class="mt-4">
                     <ul class="list-unstyled">
                         {% for item in resultados %}
@@ -20,9 +20,11 @@
                             <div class="d-flex">
                                 <div id="{{ item.id }}" class="cursor-pointer me-1" onclick="enviarId(this.id)">
                                     {% if item.disponibilidad == True %}
-                                    <iconify-icon icon="humbleicons:check-circle" width="24" height="24"></iconify-icon>
+                                    <iconify-icon class="text-success" icon="humbleicons:check-circle" width="24"
+                                        height="24"></iconify-icon>
                                     {% else %}
-                                    <iconify-icon icon="humbleicons:circle" width="24" height="24"></iconify-icon>
+                                    <iconify-icon class="text-warning" icon="humbleicons:circle" width="24"
+                                        height="24"></iconify-icon>
                                     {% endif %}
                                 </div>
                                 <div>
@@ -32,16 +34,14 @@
                                     {{ item.cantidad }}
 
                                     {% if item.unidad != "unidad" %}
-                                    {{ item.unidad }}{% if item.cantidad > 1 and item.cantidad < 20 %}{% if item.unidad[-1] in ['a', 'e' , 'i' , 'o' , 'u' ] %}s{% else %}es{% endif %} {% endif %} de {% endif %} {{ item.ingrediente }} {% endif %}
+                                    {{ item.unidad }}{% if item.cantidad > 1 and item.cantidad < 20 %}{% if
+                                        item.unidad[-1] in ['a', 'e' , 'i' , 'o' , 'u' ] %}s{% else %}es{% endif %} {%
+                                        endif %} de {% endif %} {{ item.ingrediente }} {% endif %} </div>
                                 </div>
-                            </div>
                         </li>
                         {% endfor %}
                     </ul>
                 </div>
-                <a href="/week" class="btn btn-success">
-                    Ver toda la semana
-                </a>
             </div>
         </div>
     </div>
@@ -49,13 +49,18 @@
 
 <script>
     function enviarId(id) {
-        const span = document.getElementById(id)
-        const icon = span.querySelector('iconify-icon')
+        const div = document.getElementById(id)
+        const icon = div.querySelector('iconify-icon')
 
         const iconoOriginal = icon.getAttribute('icon')
+        const claseOriginal = icon.getAttribute('class')
         const nuevoIcono = iconoOriginal === 'humbleicons:check-circle' ? 'humbleicons:circle' : 'humbleicons:check-circle'
 
-        // Cambiar el icono inmediatamente
+        // Cambiar la clase
+        const nuevaClase = claseOriginal === 'text-warning' ? 'text-success' : 'text-warning'
+        icon.setAttribute('class', nuevaClase)
+
+        // Cambiar el icono
         icon.setAttribute('icon', nuevoIcono)
 
         fetch(`/cambiar_estado/${id}`, {
@@ -67,19 +72,19 @@
             .then(response => response.json())
             .then(data => {
                 if (!data.success) {
-                    // Si hubo un error, revertir el icono al estado original
+                    // Si hubo un error, revertir el icono y la clase al estado original
                     icon.setAttribute('icon', iconoOriginal)
+                    icon.setAttribute('class', claseOriginal)
                     console.error(data.error)
                 }
             })
             .catch(error => {
-                // Si la solicitud falla, revertir el icono al estado original
+                // Si la solicitud falla, revertir el icono y la clase al estado original
                 icon.setAttribute('icon', iconoOriginal)
+                icon.setAttribute('class', claseOriginal)
                 console.error('Error:', error)
             })
     }
-
-
 </script>
 
 {% endblock %}
@@ -88,18 +93,18 @@
 {#
 
 si la unidad es 'cda', 'poco', 'chorrito', 'diente', 'cdita':
-    mostrar ingrediente
+mostrar ingrediente
 
 sino:
-    mostrar cantidad
-    si la unidad no es 'unidad':
-        mostrar unidad
-        si la cantidad es mayor a 1 y menor a 20:
-            si la unidad termina con vocal:
-                agregar 's'
-            sino:
-                agregar 'es'
-            mostrar 'de'
-        mostrar ingrediente
+mostrar cantidad
+si la unidad no es 'unidad':
+mostrar unidad
+si la cantidad es mayor a 1 y menor a 20:
+si la unidad termina con vocal:
+agregar 's'
+sino:
+agregar 'es'
+mostrar 'de'
+mostrar ingrediente
 
 #}
