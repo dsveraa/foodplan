@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}foodplan{% endblock %}
+
+{% block content %}
+
+<div class="card my-3 py-2 px-2" style="max-width: 540px;">
+    <h5 class="text-success mb-3">Agregar Ingredientes</h5>
+    <form action="/add_ingredients" method="POST">
+        <div id="ingredientes-container">
+            <div class="ingrediente-form">
+                <div class="d-flex justify-content-between gap-1">
+                    <div>
+                        <label for="ingrediente_id">Ingrediente:</label>
+                        <select class="form-control" name="ingrediente_id[]" required>
+                            <option value="">Seleccionar...</option>
+                            {% for ingrediente in ingredientes %}
+                            <option value="{{ ingrediente.id }}">{{ ingrediente.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ingrediente_cantidad">Cantidad:</label>
+                        <select class="form-control" name="ingrediente_cantidad[]" required>
+                            <option value="">Seleccionar...</option>
+                            {% for i in range(1, 10) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                            {% for i in range(10, 101, 10) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                            {% for i in range(150, 751, 50) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ingrediente_unidad">Unidad:</label>
+                        <select class="form-control" name="ingrediente_unidad[]" required>
+                            <option value="">Seleccionar...</option>
+                            {% for unidad in unidades%}
+                            <option value="{{ unidad.id }}">{{ unidad.unidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex mt-4 justify-content-between">
+            <button type="button" class="btn btn-primary" onclick="agregarIngrediente()">+</button>
+            <div class="d-flex gap-2">
+                <a href="" class="mt-2 pe-2" onclick="window.history.back()">Cancelar</a>
+                <button type="submit" class="btn btn-success">Guardar</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+<script>
+    function agregarIngrediente() {
+        const container = document.getElementById("ingredientes-container")
+        const nuevoIngrediente = document.createElement("div")
+        nuevoIngrediente.classList.add("ingrediente-form")
+
+        nuevoIngrediente.innerHTML = `
+            <div class="ingrediente-form">
+                <div class="d-flex mt-1 justify-content-between gap-1">
+                    <div>
+                        <select class="form-control" name="ingrediente_id[]" required>
+                            <option value="">Seleccionar...</option>
+                            {% for ingrediente in ingredientes %}
+                            <option value="{{ ingrediente.id }}">{{ ingrediente.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <select class="form-control" name="ingrediente_cantidad[]" required>
+                            <option value="">Seleccionar...</option>
+                            {% for i in range(1, 10) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                            {% for i in range(10, 101, 10) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                            {% for i in range(150, 751, 50) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <select class="form-control" name="ingrediente_unidad[]" required>
+                            <option value="">Seleccionar...</option>
+                            {% for unidad in unidades %}
+                            <option value="{{ unidad.id }}">{{ unidad.unidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `
+        container.appendChild(nuevoIngrediente)
+    }
+</script>
+
+
+{% endblock %}

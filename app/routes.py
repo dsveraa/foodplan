@@ -1,6 +1,7 @@
-from flask import render_template, request, redirect, url_for, jsonify
+from flask import render_template, request, redirect, url_for, jsonify, session
+from sqlalchemy import desc
 from . import db
-from .models import Plato, Ensalada, Combinacion, Carbohidrato, PlatoIngrediente
+from .models import Plato, Ensalada, Combinacion, Carbohidrato, PlatoIngrediente, Ingrediente, Unidad
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
@@ -10,6 +11,87 @@ from .utils.debugging import printn
 from .utils.get_static_url import get_static_url as gsu
 
 def register_routes(app):
+    
+    @app.route('/new_plate', methods=['GET', 'POST'])
+    def new_plate():
+        if request.method == 'POST':
+            session['datos_plato'] = request.form.to_dict()
+            # printn(session['datos_plato'])
+            return redirect(url_for('add_ingredients'))
+        return render_template("new_plate.html")
+    
+    @app.route('/add_ingredients', methods=['GET', 'POST'])
+    def add_ingredients():
+        ingredientes_obj = Ingrediente.query.order_by(Ingrediente.nombre).all()
+        unidades_obj = Unidad.query.order_by(Unidad.unidad).all()
+
+        ingredientes = [{'id': ingrediente.id, 'nombre': ingrediente.nombre} for ingrediente in ingredientes_obj]
+        unidades = [{'id': unidad.id, 'unidad':unidad.unidad} for unidad in unidades_obj]
+
+        datos_plato = session.get('datos_plato', {})
+        # printn(datos_plato)
+
+        if request.method == 'POST':
+            ingredientes_id = request.form.getlist('ingrediente_id[]')
+            ingredientes_cantidad = request.form.getlist('ingrediente_cantidad[]')
+            ingredientes_unidad = request.form.getlist('ingrediente_unidad[]')
+            # printn(ingredientes_id)
+            # printn(ingredientes_cantidad)
+            # printn(ingredientes_unidad)
+
+            ingredientes = []
+            for i in range(len(ingredientes_id)):
+                ingredientes.append({
+                    'id': ingredientes_id[i],
+                    'cantidad': ingredientes_cantidad[i],
+                    'unidad': ingredientes_unidad[i]
+                })
+            # printn(ingredientes)
+            session['ingredientes'] = ingredientes
+            # printn(session['ingredientes'])
+            datos_combinados = {**datos_plato, 'ingredientes': ingredientes}
+            # printn(datos_combinados)
+            plato_nombre = datos_combinados['plato_nombre']
+            plato_preparacion = datos_combinados['preparacion']
+            plato_carbohidratos = datos_combinados['carbohidratos']
+            plato_ingredientes = datos_combinados['ingredientes']
+
+            # printn(plato_nombre)
+            # printn(plato_preparacion)
+            # printn(plato_carbohidratos)
+            # printn(plato_ingredientes)
+
+            nuevo_plato = Plato(
+                nombre=plato_nombre,
+                preparacion=plato_preparacion, 
+                imagen='images/saltado_verduras.webp', 
+                tiene_carbos=plato_carbohidratos == 'true')
+            # printn(nuevo_plato)
+            db.session.add(nuevo_plato)
+            db.session.commit()
+
+            ultimo_id_plato = nuevo_plato.id
+            # printn(ultimo_id_plato)
+
+            # insertar datos a plato_ingredientes con un loop, considerando el último id de platos.
+
+            ingredientes = [
+                PlatoIngrediente(
+                    plato_id=ultimo_id_plato, 
+                    ingrediente_id=ingrediente['id'], 
+                    cantidad=ingrediente['cantidad'], 
+                    unidad_id=ingrediente['unidad']
+                ) 
+                for ingrediente in plato_ingredientes
+            ]
+            # printn(ingredientes)
+            db.session.bulk_save_objects(ingredientes)
+            db.session.commit()
+
+
+            return f'Datos combinados: {datos_combinados}'
+        return render_template('add_ingredients.html', step1_data=datos_plato, ingredientes=ingredientes, unidades=unidades)
+   
     @app.route('/change_combination', methods=['POST'])
     def change_combination():
         '''
@@ -29,7 +111,7 @@ def register_routes(app):
         db.session.commit()
 
         return redirect("week")
-        return jsonify({'message': f'Nuevo plato asignado al día {combinacion.dia}','plato': combinacion.platos.nombre}), 200
+        # return jsonify({'message': f'Nuevo plato asignado al día {combinacion.dia}','plato': combinacion.platos.nombre}), 200
 
     @app.route('/combination/<combinacion_id>')
     def combination(combinacion_id):

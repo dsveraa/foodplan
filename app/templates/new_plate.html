@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}foodplan{% endblock %}
+
+{% block content %}
+
+<div class="card my-3 py-2 px-2" style="max-width: 540px; width: 350px;">
+    <h5 class="text-success mb-3">Nuevo Plato</h5>
+    <form action="/new_plate" method="POST">
+        <div id="ingredientes-container">
+            <div class="ingrediente-form">
+                <div class="d-flex flex-column justify-content-between gap-1">
+                    <div>
+                        <label for="plato_nombre">Nombre del plato:</label>
+                        <input class="form-control" type="text" id="plato_nombre" name="plato_nombre" required>
+                    </div>
+                    <div>
+                        <label for="preparacion">Preparación:</label>
+                        <textarea class="form-control" name="preparacion" id="preparacion" style="min-height: 200px;"></textarea>
+                    </div>
+                    <div>
+                        <label for="carbohidratos">¿Principalmente carbohidratos?:</label>
+                        <select class="form-control" name="carbohidratos" id="carbohidratos" required>
+                            <option value="false">No</option>
+                            <option value="true">Si</option>
+                            
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex mt-4 justify-content-end">
+            <div class="d-flex gap-2">
+                <a href="" class="mt-2 pe-2" onclick="window.history.back()">Cancelar</a>
+                <button type="submit" class="btn btn-success">Siguiente</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    function agregarIngrediente() {
+        const container = document.getElementById("ingredientes-container")
+        const nuevoIngrediente = document.createElement("div")
+        nuevoIngrediente.classList.add("ingrediente-form")
+
+        nuevoIngrediente.innerHTML = `
+            <div class="ingrediente-form">
+                <div class="d-flex mt-1 justify-content-between gap-1">
+                    <div>
+                        <select class="form-control" name="ingrediente_id" id="ingrediente_id" required>
+                            <option value="">Seleccionar...</option>
+                            {% for ingrediente in ingredientes %}
+                            <option value="{{ ingrediente.id }}">{{ ingrediente.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <select class="form-control" name="ingrediente_cantidad" required>
+                            <option value="">Seleccionar...</option>
+                            {% for i in range(1, 10) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                            {% for i in range(10, 101, 10) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                            {% for i in range(150, 751, 50) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <select class="form-control" name="ingrediente_unidad" id="ingrediente_unidad" required>
+                            <option value="">Seleccionar...</option>
+                            {% for unidad in unidades%}
+                            <option value="{{ unidad.id }}">{{ unidad.unidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `
+        container.appendChild(nuevoIngrediente)
+    }
+</script>
+
+{% endblock %}
