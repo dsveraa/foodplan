@@ -28,6 +28,8 @@ def register_routes(app):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             flash('La imagen se subió correctamente', 'success')
+            printn(filename)
+            session['imagen_plato'] = filename
         return redirect(url_for('new_plate'))
 
     
@@ -70,10 +72,12 @@ def register_routes(app):
             plato_carbohidratos = datos_combinados['carbohidratos']
             plato_ingredientes = datos_combinados['ingredientes']
 
+            imagen = session['imagen_plato']
+
             nuevo_plato = Plato(
                 nombre=plato_nombre,
                 preparacion=plato_preparacion, 
-                imagen='images/saltado_verduras.webp', 
+                imagen=f'images/{imagen}', 
                 tiene_carbos=plato_carbohidratos == 'true')
 
             db.session.add(nuevo_plato)
