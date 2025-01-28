@@ -1,7 +1,9 @@
 from flask import render_template, request, redirect, url_for, jsonify, session, flash
 from sqlalchemy import desc
+from sqlalchemy.orm import joinedload
+from collections import defaultdict
 from . import db
-from .models import Plato, Ensalada, Combinacion, Carbohidrato, PlatoIngrediente, Ingrediente, Unidad
+from .models import Plato, Ensalada, Combinacion, PlatoIngrediente, Ingrediente, Unidad
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -12,6 +14,11 @@ import os
 from .utils.debugging import printn
 from .utils.get_static_url import get_static_url as gsu
 from .utils.image_processing import allowed_file
+from app.services.helpers import (
+    obtener_dia_actual,
+    manejar_domingo,
+    obtener_detalles_combinacion
+)
 
 def register_routes(app):
     
@@ -32,7 +39,6 @@ def register_routes(app):
             session['imagen_plato'] = filename
         return redirect(url_for('new_plate'))
 
-    
     @app.route('/new_plate', methods=['GET', 'POST'])
     def new_plate():
         if request.method == 'POST':
@@ -137,7 +143,14 @@ def register_routes(app):
 
         platos = [{'id': plato.id, 'nombre': plato.nombre} for plato in platos_obj]
         ensaladas = [{'id': ensalada.id, 'nombre': ensalada.nombre} for ensalada in ensaladas_obj]
-        combinacion = {'id': combinacion_obj.id, 'plato': combinacion_obj.platos.nombre, 'ensalada': combinacion_obj.ensaladas.nombre, 'dia': combinacion_obj.dia, 'imagen': gsu(combinacion_obj.platos.imagen), 'plato_actual_id': combinacion_obj.plato_id, 'ensalada_actual_id': combinacion_obj.ensalada_id }
+        combinacion = {
+            'id': combinacion_obj.id, 
+            'plato': combinacion_obj.platos.nombre, 
+            'ensalada': combinacion_obj.ensaladas.nombre, 
+            'dia': combinacion_obj.dia, 
+            'imagen': gsu(combinacion_obj.platos.imagen), 
+            'plato_actual_id': combinacion_obj.plato_id, 
+            'ensalada_actual_id': combinacion_obj.ensalada_id }
 
         return render_template("change_combination.html", platos=platos, ensaladas=ensaladas, combinacion=combinacion)
         # return jsonify({'platos': platos, 'ensaladas': ensaladas, 'combinacion': combinacion}), 200
@@ -152,7 +165,16 @@ def register_routes(app):
         - Agregar a resultados nuevos ingredientes
         - Si el ingrediente ya está en resultados, sumar cantidades.
         '''
-        combinaciones = Combinacion.query.order_by(Combinacion.id).all()
+        # combinaciones = Combinacion.query.order_by(Combinacion.id).all()
+        combinaciones = (
+            db.session.query(PlatoIngrediente)
+            .join(Combinacion, Combinacion.plato_id == PlatoIngrediente.plato_id)
+            .options(
+                joinedload(PlatoIngrediente.ingredientes),  
+                joinedload(PlatoIngrediente.unidades)  
+            )
+            .all()
+        )
         plato_ingredientes = PlatoIngrediente.query.order_by(PlatoIngrediente.plato_id).all()
 
         lista_ingredientes = []
@@ -206,7 +228,6 @@ def register_routes(app):
             return jsonify({"success": True, "new_state": item_obj.disponible})
         return jsonify({"success": False, "error": "Item no encontrado"}), 404
 
-
     @app.route('/week')
     def week():
         today = datetime.now()
@@ -218,7 +239,16 @@ def register_routes(app):
             fecha = inicio_semana + timedelta(days=i)
             dias_con_fechas.append({"dia": dia, "fecha": fecha.day})
         
-        combinaciones_obj = Combinacion.query.order_by(Combinacion.id).all()
+        combinaciones_obj = (
+            Combinacion.query
+            .options(
+                joinedload(Combinacion.platos).joinedload(Plato.plato_ingredientes).joinedload(PlatoIngrediente.ingredientes),
+                joinedload(Combinacion.ensaladas)
+            )
+            .order_by(Combinacion.id)
+            .all()
+        )   
+
         
         dias_data = []
         for i, combinacion in enumerate(combinaciones_obj):
@@ -247,85 +277,22 @@ def register_routes(app):
         return render_template("week.html", dias_data=dias_data)
         # return jsonify({"dias_data": dias_data})
 
-    
     @app.route('/')
     def index():
-        dias_esp = {
-            'Monday': 'lunes',
-            'Tuesday': 'martes',
-            'Wednesday': 'miércoles',
-            'Thursday': 'jueves',
-            'Friday': 'viernes',
-            'Saturday': 'sábado',
-            'Sunday': 'domingo'
-        }
-        dia = datetime.now()
-        # dia = datetime(2025, 1, 19, 0, 0, 0)
-        dia_nombre = dia.strftime('%A')
-        dia_nombre_esp = dias_esp.get(dia_nombre, dia_nombre)
-        # dia_nombre_esp = 'domingo'
-        dia_numero = dia.day
+        dia_nombre_esp, dia_numero = obtener_dia_actual()
         dia_completo = f"{dia_nombre_esp} {dia_numero}"
-        
+
         if dia_nombre_esp == 'domingo':
-            hoy = datetime.now().date() # <--- para aislar solo la fecha
-            domingo_obj = Combinacion.query.filter_by(dia='domingo').first()
-            ultima_fecha_domingo = domingo_obj.fecha.date() # <--- aislar la fecha
-            if ultima_fecha_domingo == hoy:
-                printn("ya se registraron los platos para martes y viernes")
-            else:
-                carbohidratos_obj = Carbohidrato.query.all()
-                if not carbohidratos_obj:
-                    platos_con_carbohidratos = Plato.query.filter_by(tiene_carbos=True).all()
-                    for plato in platos_con_carbohidratos:
-                        nuevo_carbo = Carbohidrato(plato_id=plato.id)
-                        db.session.add(nuevo_carbo)
-                    db.session.commit()
+            manejar_domingo()
 
-                dias = ['martes', 'viernes']
-
-                for dia in dias:
-                    carbo_seleccionado = Carbohidrato.query.order_by(Carbohidrato.plato_id.asc()).first()
-                    plato = Combinacion.query.filter_by(dia=dia).first()
-                    plato.plato_id = carbo_seleccionado.plato_id
-                    db.session.delete(carbo_seleccionado)
-                    db.session.commit()
-
-                domingo_obj.fecha = datetime.now()
-                db.session.commit()
-                    
-        combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
-
-        if combinacion_obj:
-            plato_nombre = combinacion_obj.platos.nombre if combinacion_obj.platos else None
-            ensalada_nombre = combinacion_obj.ensaladas.nombre if combinacion_obj.ensaladas else None
-
-            ingredientes = []
-
-            if combinacion_obj.platos:
-                for plato_ingrediente in combinacion_obj.platos.plato_ingredientes:
-                    ingredientes.append({
-                        "nombre": plato_ingrediente.ingredientes.nombre,
-                        "cantidad": plato_ingrediente.cantidad,         
-                        "unidad": plato_ingrediente.unidades.unidad     
-                    })
-
-            preparacion = combinacion_obj.platos.preparacion if combinacion_obj.platos else None
-            imagen_url = gsu(combinacion_obj.platos.imagen)
-
-        else:
-            plato_nombre = None
-            ensalada_nombre = None
-            ingredientes = None
-            preparacion = None
-            imagen_url = None
+        plato, ensalada, ingredientes, preparacion, imagen = obtener_detalles_combinacion(dia_nombre_esp)
 
         return render_template(
-        "index.html",
-        dia=dia_completo,
-        plato=plato_nombre,
-        ensalada=ensalada_nombre,
-        ingredientes=ingredientes,
-        preparacion=preparacion,
-        imagen=imagen_url
-    )
+            "index.html",
+            dia=dia_completo,
+            plato=plato,
+            ensalada=ensalada,
+            ingredientes=ingredientes,
+            preparacion=preparacion,
+            imagen=imagen
+        )
