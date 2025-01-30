@@ -20,12 +20,13 @@ from app.services.helpers import (
     obtener_detalles_combinacion,
     obtener_ingredientes,
     obtener_plato,
-    obtener_plato_ingredientes
+    obtener_plato_ingredientes,
+    obtener_unidades
 )
 
 def register_routes(app):
-    @app.route('/edit_plate/<id>', methods=["GET", "POST"])
-    def edit_plate(id):
+    @app.route('/edit_ingredients/<id>', methods=["GET", "POST"])
+    def edit_ingredients(id):
         '''
         GET:
 
@@ -40,10 +41,45 @@ def register_routes(app):
         - si hay nuevas entradas de ingredientes en tabla plato_ingredientes, agregar nuevos valores.
         '''
         
-        nombre, preparacion = obtener_plato(id)
+        nombre, preparacion, imagen = obtener_plato(id)
         plato_ingredientes = obtener_plato_ingredientes(id)
+        ingredientes = obtener_ingredientes()
+        unidades = obtener_unidades()
+
+        if request.method == 'POST':
+            ingredientes_id = request.form.getlist('ingrediente_id[]')
+            ingredientes_cantidad = request.form.getlist('ingrediente_cantidad[]')
+            ingredientes_unidad = request.form.getlist('ingrediente_unidad[]')
         
-        return jsonify({'nombre': nombre, 'preparacion': preparacion, 'plato_ingredientes': plato_ingredientes})
+            plato_ingredientes = []
+            for i in range(len(ingredientes_id)):
+                plato_ingredientes.append({
+                    'id': ingredientes_id[i],
+                    'cantidad': ingredientes_cantidad[i],
+                    'unidad': ingredientes_unidad[i]
+                })
+            
+            antiguos_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id).all()
+            
+            for ingrediente in antiguos_ingredientes:
+                db.session.delete(ingrediente)
+
+            ingredientes = [
+                PlatoIngrediente(
+                    plato_id=id, 
+                    ingrediente_id=ingrediente['id'], 
+                    cantidad=ingrediente['cantidad'], 
+                    unidad_id=ingrediente['unidad'],
+                    disponible=0
+                ) 
+                for ingrediente in plato_ingredientes
+            ]
+            db.session.bulk_save_objects(ingredientes)
+            db.session.commit()
+
+            return redirect(url_for("week"))
+
+        return render_template("edit_ingredients.html", id=id, nombre=nombre, preparacion=preparacion, imagen=gsu(imagen), plato_ingredientes=plato_ingredientes, ingredientes=ingredientes, unidades=unidades)
     
     @app.route('/upload', methods=['POST'])
     def upload():
@@ -65,15 +101,16 @@ def register_routes(app):
     @app.route('/new_plate', methods=['GET', 'POST'])
     def new_plate():
         if request.method == 'POST':
-            session['datos_plato'] = request.form.to_dict()
+            session['datos_plato'] = request.form.to_dict() # {'plato_nombre': str, 'preparacion': str, 'carbohidratos': bool}
+            datos_plato =  session['datos_plato']
+            printn(datos_plato)
             return redirect(url_for('add_ingredients'))
-        plates = Plato.query.all()
-        printn([plate.nombre for plate in plates])
         return render_template("new_plate.html")
     
     @app.route('/add_ingredients', methods=['GET', 'POST'])
-    def add_ingredients():
-        ingredientes, unidades = obtener_ingredientes()
+    def add_ingredients():        
+        ingredientes = obtener_ingredientes()
+        unidades = obtener_unidades()
 
         datos_plato = session.get('datos_plato', {})
 
@@ -97,6 +134,7 @@ def register_routes(app):
             plato_nombre = datos_combinados['plato_nombre']
             plato_preparacion = datos_combinados['preparacion']
             plato_carbohidratos = datos_combinados['carbohidratos']
+
             plato_ingredientes = datos_combinados['ingredientes']
 
             imagen = session['imagen_plato']
@@ -124,9 +162,9 @@ def register_routes(app):
             db.session.bulk_save_objects(ingredientes)
             db.session.commit()
 
-
             return f'Datos combinados: {datos_combinados}'
-        return render_template('add_ingredients.html', step1_data=datos_plato, ingredientes=ingredientes, unidades=unidades)
+
+        return render_template('add_ingredients.html', ingredientes=ingredientes, unidades=unidades)
    
     @app.route('/change_combination', methods=['POST'])
     def change_combination():
@@ -291,7 +329,8 @@ def register_routes(app):
                 "plato_imagen": gsu(combinacion.platos.imagen) if combinacion.platos else None,
                 "plato_ingredientes": plato_ingredientes,
                 "plato_preparacion": combinacion.platos.preparacion if combinacion.platos else None,
-                "id": combinacion.id
+                "id": combinacion.id,
+                "plato_id": combinacion.platos.id
             }
             dias_data.append(dia_info)
         

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}foodplan{% endblock %}
+{% block title %}Menú semanal{% endblock %}
 
 {% block content %}
 <div class="mt-3">
@@ -13,7 +13,7 @@
             </div>
             <div class="col-md-8">
                 <div class="card-body">
-                    <h5 class="card-title text-success">{{ dia.dia }} {{ dia.fecha }}</h5>
+                    <h5 class="card-title text-success">{{ dia.dia }} {{ dia.fecha }} <a href="/combination/{{ dia.id }}"><iconify-icon class="text-success" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a></h5>
                     <div class="d-flex align-items-center justify-content-between">
                         <p class="card-text flex-grow-1 mb-0">
                             {{ dia.plato_nombre }} y ensalada de {{ dia.ensalada_nombre }}
@@ -22,13 +22,10 @@
                             data-imagen="#imagen{{ loop.index }}">
                             Detalles
                         </button>
-                        <a href="/combination/{{ dia.id }}" class="btn btn-warning ms-2" >
-                            Editar
-                        </a>
                     </div>
                     <div class="detalles-content" id="detalles{{ loop.index }}">
                         <div class="mt-4">
-                            <h6>Ingredientes:</h6>
+                            <h6>Ingredientes:<a href="/edit_ingredients/{{ dia.plato_id }}"><iconify-icon class="text-secondary" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a></h6>
                             <ul>
                                 {% for ingrediente in dia.plato_ingredientes %}
                                     <li>{{ ingrediente.cantidad }}

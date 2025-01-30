@@ -75,21 +75,26 @@ def obtener_detalles_combinacion(dia_nombre_esp):
 
 def obtener_ingredientes():
     ingredientes_obj = Ingrediente.query.order_by(Ingrediente.nombre).all()
-    unidades_obj = Unidad.query.order_by(Unidad.unidad).all()
     ingredientes = [{'id': ingrediente.id, 'nombre': ingrediente.nombre} for ingrediente in ingredientes_obj]
+
+    return ingredientes
+
+def obtener_unidades():
+    unidades_obj = Unidad.query.order_by(Unidad.unidad).all()
     unidades = [{'id': unidad.id, 'unidad':unidad.unidad} for unidad in unidades_obj]
 
-    return ingredientes, unidades
+    return unidades
 
 def obtener_plato(id):
     plato_obj = Plato.query.get(id)
     nombre = plato_obj.nombre
     preparacion = plato_obj.preparacion
+    imagen = plato_obj.imagen
 
-    return nombre, preparacion
+    return nombre, preparacion, imagen
 
 def obtener_plato_ingredientes(id):
     plato_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id).all()
-    plato_ingredientes = [{'id':ingrediente.id, 'ingrediente_id': ingrediente.ingrediente_id, 'cantidad': ingrediente.cantidad, 'unidad_id': ingrediente.unidad_id, 'disponible': ingrediente.disponible} for ingrediente in plato_ingredientes]
+    plato_ingredientes = [{'id':ingrediente.id, 'ingrediente_id': ingrediente.ingrediente_id, 'nombre':ingrediente.ingredientes.nombre,'cantidad': ingrediente.cantidad, 'unidad_id': ingrediente.unidad_id, 'disponibilidad': ingrediente.disponible} for ingrediente in plato_ingredientes]
 
     return plato_ingredientes
