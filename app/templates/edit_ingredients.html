@@ -11,8 +11,11 @@
         </div>
         <div class="col-md-8">
             <div class="card-body">
-                <div class="fs-4">
-                {{ nombre }}
+                <div class="fs-4 text-success">
+                    {{ nombre }}
+                </div>
+                <div class="mt-2">
+                    <p class="">Editar ingredientes:</p>
                 </div>
                 <form action="/edit_ingredients/{{ id }}" method="POST">
                     <div id="ingredientes-container">
@@ -22,7 +25,8 @@
                                 <select class="form-control" name="ingrediente_id[]" required>
                                     <option value="">Seleccionar...</option>
                                     {% for ingrediente in ingredientes %}
-                                    <option value="{{ ingrediente.id }}" {% if ingrediente.id == plato_ingrediente.ingrediente_id %}selected{% endif %}>
+                                    <option value="{{ ingrediente.id }}" {% if
+                                        ingrediente.id==plato_ingrediente.ingrediente_id %}selected{% endif %}>
                                         {{ ingrediente.nombre }}
                                     </option>
                                     {% endfor %}
@@ -32,13 +36,16 @@
                                 <select class="form-control" name="ingrediente_cantidad[]" required>
                                     <option value="">Seleccionar...</option>
                                     {% for i in range(1, 10) %}
-                                    <option value="{{ i }}" {% if i == plato_ingrediente.cantidad %}selected{% endif %}>{{ i }}</option>
+                                    <option value="{{ i }}" {% if i==plato_ingrediente.cantidad %}selected{% endif %}>{{
+                                        i }}</option>
                                     {% endfor %}
                                     {% for i in range(10, 101, 10) %}
-                                    <option value="{{ i }}" {% if i == plato_ingrediente.cantidad %}selected{% endif %}>{{ i }}</option>
+                                    <option value="{{ i }}" {% if i==plato_ingrediente.cantidad %}selected{% endif %}>{{
+                                        i }}</option>
                                     {% endfor %}
                                     {% for i in range(150, 751, 50) %}
-                                    <option value="{{ i }}" {% if i == plato_ingrediente.cantidad %}selected{% endif %}>{{ i }}</option>
+                                    <option value="{{ i }}" {% if i==plato_ingrediente.cantidad %}selected{% endif %}>{{
+                                        i }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -46,7 +53,8 @@
                                 <select class="form-control" name="ingrediente_unidad[]" required>
                                     <option value="">Seleccionar...</option>
                                     {% for unidad in unidades %}
-                                    <option value="{{ unidad.id }}" {% if unidad.id == plato_ingrediente.unidad_id %}selected{% endif %}>
+                                    <option value="{{ unidad.id }}" data-singular="{{ unidad.unidad }}" {% if
+                                        unidad.id==plato_ingrediente.unidad_id %}selected{% endif %}>
                                         {{ unidad.unidad }}
                                     </option>
                                     {% endfor %}
@@ -57,11 +65,13 @@
                     </div>
                     <div class="d-flex mt-4 justify-content-between">
                         <div>
-                            <iconify-icon class="cursor-pointer" icon="hugeicons:add-circle" width="36" height="36" onclick="agregarIngrediente()"></iconify-icon>
-                            <iconify-icon class="cursor-pointer" icon="hugeicons:minus-sign-circle" width="36" height="36" onclick="eliminarUltimoIngrediente()"></iconify-icon>
+                            <iconify-icon class="cursor-pointer" icon="hugeicons:add-circle" width="36" height="36"
+                                onclick="agregarIngrediente()"></iconify-icon>
+                            <iconify-icon class="cursor-pointer" icon="hugeicons:minus-sign-circle" width="36"
+                                height="36" onclick="eliminarUltimoIngrediente()"></iconify-icon>
                         </div>
                         <div class="d-flex gap-2">
-                            <a href="" class="mt-2 pe-2" onclick="window.history.back()">Cancelar</a>
+                            <a href="/week" class="mt-2 pe-2">Cancelar</a>
                             <button type="submit" class="btn btn-success">Guardar</button>
                         </div>
                     </div>
@@ -72,11 +82,44 @@
 </div>
 
 <script>
+    function configurarPluralizacion(container) {
+        const cantidadSelects = container.querySelectorAll('select[name="ingrediente_cantidad[]"]')
+        const unidadSelects = container.querySelectorAll('select[name="ingrediente_unidad[]"]')
+
+        const excluidos = ["cc", "g", "poco"]
+
+        function actualizarUnidad(cantidadSelect, unidadSelect) {
+            const cantidad = parseInt(cantidadSelect.value) || 0
+
+            Array.from(unidadSelect.options).forEach((option, index) => {
+                if (index === 0) return
+                const singular = option.getAttribute('data-singular')
+
+                if (singular?.toLowerCase() === "unidad") {
+                    option.textContent = cantidad > 1 ? "unidades" : singular
+                } else if (excluidos.includes(singular?.toLowerCase())) {
+                    option.textContent = singular
+                } else if (singular) {
+                    option.textContent = cantidad > 1 ? `${singular}s` : singular
+                }
+            })
+        }
+
+        cantidadSelects.forEach((select, index) => {
+            actualizarUnidad(select, unidadSelects[index])
+            select.addEventListener('change', () => actualizarUnidad(select, unidadSelects[index]))
+        })
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        configurarPluralizacion(document)
+    })
+
     function agregarIngrediente() {
-        const container = document.getElementById("ingredientes-container");
-        const nuevoIngrediente = document.createElement("div");
-        nuevoIngrediente.classList.add("ingrediente-form", "d-flex", "justify-content-between", "gap-1"); // Añadimos todas las clases necesarias
-        
+        const container = document.getElementById("ingredientes-container")
+        const nuevoIngrediente = document.createElement("div")
+        nuevoIngrediente.classList.add("ingrediente-form", "d-flex", "justify-content-between", "gap-1")
+
         nuevoIngrediente.innerHTML = `
             <div>
                 <select class="form-control" name="ingrediente_id[]" required>
@@ -104,21 +147,28 @@
                 <select class="form-control" name="ingrediente_unidad[]" required>
                     <option value="">Seleccionar...</option>
                     {% for unidad in unidades %}
-                    <option value="{{ unidad.id }}">{{ unidad.unidad }}</option>
+                    <option 
+                        value="{{ unidad.id }}" 
+                        data-singular="{{ unidad.unidad }}" <!-- ¡Este es el cambio clave! -->
+                    >
+                        {{ unidad.unidad }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
-        `;
+        `
 
-        container.appendChild(nuevoIngrediente);
+        container.appendChild(nuevoIngrediente)
+
+        configurarPluralizacion(nuevoIngrediente)
     }
 
-    
+
     function eliminarUltimoIngrediente() {
-        const ingredientes = document.querySelectorAll(".ingrediente-form");
+        const ingredientes = document.querySelectorAll(".ingrediente-form")
 
         if (ingredientes.length > 1) {
-            ingredientes[ingredientes.length - 1].remove(); // Elimina el último elemento
+            ingredientes[ingredientes.length - 1].remove() // Elimina el último elemento
         }
     }
 
