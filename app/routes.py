@@ -3,7 +3,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
 from collections import defaultdict
 from . import db
-from .models import Plato, Ensalada, Combinacion, PlatoIngrediente, Ingrediente, Unidad
+from .models import Plato, Ensalada, Combinacion, PlatoIngrediente
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -17,10 +17,33 @@ from .utils.image_processing import allowed_file
 from app.services.helpers import (
     obtener_dia_actual,
     manejar_domingo,
-    obtener_detalles_combinacion
+    obtener_detalles_combinacion,
+    obtener_ingredientes,
+    obtener_plato,
+    obtener_plato_ingredientes
 )
 
 def register_routes(app):
+    @app.route('/edit_plate/<id>', methods=["GET", "POST"])
+    def edit_plate(id):
+        '''
+        GET:
+
+        - filtrar el plato por id
+        - obtener datos del plato desde tabla platos (nombre, preparación)
+        - obtener datos de ingredientes desde tabla plato_ingredientes (ingrediente_id, cantidad, unidad_id)
+                
+        POST:
+        
+        - si hay cambios en los valores de tabla platos, modificar tabla con nuevos valores.
+        - si hay cambios en los valores de tabla plato_ingredientes, modificar con nuevos valores.
+        - si hay nuevas entradas de ingredientes en tabla plato_ingredientes, agregar nuevos valores.
+        '''
+        
+        nombre, preparacion = obtener_plato(id)
+        plato_ingredientes = obtener_plato_ingredientes(id)
+        
+        return jsonify({'nombre': nombre, 'preparacion': preparacion, 'plato_ingredientes': plato_ingredientes})
     
     @app.route('/upload', methods=['POST'])
     def upload():
@@ -44,15 +67,13 @@ def register_routes(app):
         if request.method == 'POST':
             session['datos_plato'] = request.form.to_dict()
             return redirect(url_for('add_ingredients'))
+        plates = Plato.query.all()
+        printn([plate.nombre for plate in plates])
         return render_template("new_plate.html")
     
     @app.route('/add_ingredients', methods=['GET', 'POST'])
     def add_ingredients():
-        ingredientes_obj = Ingrediente.query.order_by(Ingrediente.nombre).all()
-        unidades_obj = Unidad.query.order_by(Unidad.unidad).all()
-
-        ingredientes = [{'id': ingrediente.id, 'nombre': ingrediente.nombre} for ingrediente in ingredientes_obj]
-        unidades = [{'id': unidad.id, 'unidad':unidad.unidad} for unidad in unidades_obj]
+        ingredientes, unidades = obtener_ingredientes()
 
         datos_plato = session.get('datos_plato', {})
 

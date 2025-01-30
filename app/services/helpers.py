@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.models import Combinacion, Carbohidrato, Plato, db
+from app.models import Combinacion, Carbohidrato, Plato, db, Ingrediente, Unidad, PlatoIngrediente
 from app.utils.get_static_url import get_static_url as gsu
 
 DIAS_ESP = {
@@ -72,3 +72,24 @@ def obtener_detalles_combinacion(dia_nombre_esp):
     imagen_url = gsu(combinacion_obj.platos.imagen) if combinacion_obj.platos else None
 
     return plato_nombre, ensalada_nombre, ingredientes, preparacion, imagen_url
+
+def obtener_ingredientes():
+    ingredientes_obj = Ingrediente.query.order_by(Ingrediente.nombre).all()
+    unidades_obj = Unidad.query.order_by(Unidad.unidad).all()
+    ingredientes = [{'id': ingrediente.id, 'nombre': ingrediente.nombre} for ingrediente in ingredientes_obj]
+    unidades = [{'id': unidad.id, 'unidad':unidad.unidad} for unidad in unidades_obj]
+
+    return ingredientes, unidades
+
+def obtener_plato(id):
+    plato_obj = Plato.query.get(id)
+    nombre = plato_obj.nombre
+    preparacion = plato_obj.preparacion
+
+    return nombre, preparacion
+
+def obtener_plato_ingredientes(id):
+    plato_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id).all()
+    plato_ingredientes = [{'id':ingrediente.id, 'ingrediente_id': ingrediente.ingrediente_id, 'cantidad': ingrediente.cantidad, 'unidad_id': ingrediente.unidad_id, 'disponible': ingrediente.disponible} for ingrediente in plato_ingredientes]
+
+    return plato_ingredientes

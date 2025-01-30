@@ -38,7 +38,7 @@
                         <label for="ingrediente_unidad">Unidad:</label>
                         <select class="form-control" name="ingrediente_unidad[]" required>
                             <option value="">Seleccionar...</option>
-                            {% for unidad in unidades%}
+                            {% for unidad in unidades %}
                             <option value="{{ unidad.id }}">{{ unidad.unidad }}</option>
                             {% endfor %}
                         </select>
@@ -47,58 +47,69 @@
             </div>
         </div>
         <div class="d-flex mt-4 justify-content-between">
-            <button type="button" class="btn btn-primary" onclick="agregarIngrediente()">+</button>
+            <div>
+                <iconify-icon class="cursor-pointer" icon="hugeicons:add-circle" width="36" height="36" onclick="agregarIngrediente()"></iconify-icon>
+                <iconify-icon class="cursor-pointer" icon="hugeicons:minus-sign-circle" width="36" height="36" onclick="eliminarUltimoIngrediente()"></iconify-icon>
+            </div>
             <div class="d-flex gap-2">
                 <a href="" class="mt-2 pe-2" onclick="window.history.back()">Cancelar</a>
                 <button type="submit" class="btn btn-success">Guardar</button>
             </div>
         </div>
     </form>
-
 </div>
+
 <script>
     function agregarIngrediente() {
-        const container = document.getElementById("ingredientes-container")
-        const nuevoIngrediente = document.createElement("div")
-        nuevoIngrediente.classList.add("ingrediente-form")
+        const container = document.getElementById("ingredientes-container");
+        const nuevoIngrediente = document.createElement("div");
+        nuevoIngrediente.classList.add("ingrediente-form");
 
         nuevoIngrediente.innerHTML = `
-            <div class="ingrediente-form">
-                <div class="d-flex mt-1 justify-content-between gap-1">
-                    <div>
-                        <select class="form-control" name="ingrediente_id[]" required>
-                            <option value="">Seleccionar...</option>
-                            {% for ingrediente in ingredientes %}
-                            <option value="{{ ingrediente.id }}">{{ ingrediente.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <select class="form-control" name="ingrediente_cantidad[]" required>
-                            <option value="">Seleccionar...</option>
-                            {% for i in range(1, 10) %}
-                            <option value="{{ i }}">{{ i }}</option>
-                            {% endfor %}
-                            {% for i in range(10, 101, 10) %}
-                            <option value="{{ i }}">{{ i }}</option>
-                            {% endfor %}
-                            {% for i in range(150, 751, 50) %}
-                            <option value="{{ i }}">{{ i }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <select class="form-control" name="ingrediente_unidad[]" required>
-                            <option value="">Seleccionar...</option>
-                            {% for unidad in unidades %}
-                            <option value="{{ unidad.id }}">{{ unidad.unidad }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <div class="d-flex mt-1 justify-content-between gap-1">
+                <div>
+                    <select class="form-control" name="ingrediente_id[]" required>
+                        <option value="">Seleccionar...</option>
+                        {% for ingrediente in ingredientes %}
+                        <option value="{{ ingrediente.id }}">{{ ingrediente.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <select class="form-control" name="ingrediente_cantidad[]" required>
+                        <option value="">Seleccionar...</option>
+                        {% for i in range(1, 10) %}
+                        <option value="{{ i }}">{{ i }}</option>
+                        {% endfor %}
+                        {% for i in range(10, 101, 10) %}
+                        <option value="{{ i }}">{{ i }}</option>
+                        {% endfor %}
+                        {% for i in range(150, 751, 50) %}
+                        <option value="{{ i }}">{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <select class="form-control" name="ingrediente_unidad[]" required>
+                        <option value="">Seleccionar...</option>
+                        {% for unidad in unidades %}
+                        <option value="{{ unidad.id }}">{{ unidad.unidad }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
-        `
-        container.appendChild(nuevoIngrediente)
+        `;
+        container.appendChild(nuevoIngrediente);
+    }
+
+    function eliminarUltimoIngrediente() {
+        const container = document.getElementById("ingredientes-container");
+        const ingredientes = container.querySelectorAll(".ingrediente-form");
+
+        // Verifica si hay más de un campo de ingrediente (para no eliminar el primero)
+        if (ingredientes.length > 1) {
+            container.removeChild(ingredientes[ingredientes.length - 1]);
+        } 
     }
 </script>
 
