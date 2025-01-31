@@ -26,11 +26,13 @@
                             <option value="{{ ensalada.id }}" {% if ensalada.id == combinacion.ensalada_actual_id %}selected{% endif %}>{{ ensalada.nombre }}</option>
                         {% endfor %}
                     </select>
-                    <button class="btn btn-success" type="submit">Aplicar</button>
+                    <div class="d-flex justify-content-end mt-2">
+                        <div class="d-flex gap-2">
+                            <a href="/week" class="mt-2 pe-2">Cancelar</a>
+                            <button type="submit" class="btn btn-success">Guardar</button>
+                        </div>
+                    </div>
                 </form>
-                <div class="d-flex flex-column mt-2">
-                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">Cancelar</button>
-                </div>
             </div>
         </div>
     </div>
