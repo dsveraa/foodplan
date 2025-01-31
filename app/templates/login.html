@@ -1,22 +1,29 @@
 {% extends 'base.html' %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Iniciar sesión{% endblock %}
 
 {% block content %}
 
 <div class="card my-3 py-2 px-2" style="max-width: 540px; width: 350px;">
     <h5 class="text-success">Iniciar sesión</h5>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mt-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <form class="mt-2" method="POST" action="/login">
         <div>
-            <label for="email" class="form-label">usuario:</label>
-            <input type="email" class="form-control" id="email" aria-describedby="emailHelp" name="email" placeholder="ej. david@email.com" required>
+            <label for="username" class="form-label">usuario:</label>
+            <input type="username" class="form-control" id="username" name="username" value="{{ username if username else ''}}" required>
         </div>
-        <div class="mt-4">
+        <div class="mt-2">
             <label for="password" class="form-label">contraseña:</label>
             <input type="password" class="form-control" id="password" name="password" required>
         </div>
-        <div class="mt-4 d-flex justify-content-between">
-            <a href="/register">Crear usuario</a>
+        <div class="mt-2 d-flex justify-content-between">
+            <a class="mt-2" href="/register">Crear usuario</a>
             <button type="submit" class="btn btn-primary">Validar</button>
         </div>
     </form>

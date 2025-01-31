@@ -77,8 +77,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(20))
     username = Column(String(20))
-    password = Column(String(50))
+    password = Column(String(250))
 
 user = relationship("Combinacion", back_populates='user')

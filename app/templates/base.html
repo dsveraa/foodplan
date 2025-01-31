@@ -1,76 +1,150 @@
 <!DOCTYPE html>
 <html lang="es" data-bs-theme="light">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}foodplan{% endblock %}</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-<link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}foodplan{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <style>
-body {
-    background-color:  #fff6e8 ;
-}
+  body {
+    background-color: #fff6e8;
+  }
 
-.andika-regular {
-  font-family: "Andika", serif;
-  font-weight: 400;
-  font-style: normal;
-}
+  .nav-color {
+    background-color: #fff6e8;
+  }
 
-.andika-bold {
-  font-family: "Andika", serif;
-  font-weight: 700;
-  font-style: normal;
-}
+  .andika-regular {
+    font-family: "Andika", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
 
-.andika-regular-italic {
-  font-family: "Andika", serif;
-  font-weight: 400;
-  font-style: italic;
-}
+  .andika-bold {
+    font-family: "Andika", serif;
+    font-weight: 700;
+    font-style: normal;
+  }
 
-.andika-bold-italic {
-  font-family: "Andika", serif;
-  font-weight: 700;
-  font-style: italic;
-}
-.detalles-content {
+  .andika-regular-italic {
+    font-family: "Andika", serif;
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  .andika-bold-italic {
+    font-family: "Andika", serif;
+    font-weight: 700;
+    font-style: italic;
+  }
+
+  .detalles-content {
     height: 0;
     overflow: hidden;
     transition: height 0.4s ease;
-}
-.detalles-content.show {
-    height: auto;
-}
-.cursor-pointer {
-  cursor: pointer;
-}
+  }
 
+  .detalles-content.show {
+    height: auto;
+  }
+
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  .password-container {
+    margin-bottom: 15px;
+  }
+
+  .password-container input {
+    padding-right: 40px;
+    width: 100%;
+  }
+
+  .eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+  }
+
+  .eye-icon:hover {
+    color: #000;
+  }
 </style>
 </head>
+
 <body class="d-flex justify-content-center align-items-center">
-    <div class="container my-4">
-        <div class="d-flex flex-column align-items-center">
-            <h1><a class="text-warning mb-2 text-decoration-none andika-regular-italic" href="/">foodplan</a></h1>
-            <div class="d-flex gap-4 my-3">
-              <a class="text-decoration-none text-secondary" href="/"><b>Home</b></a>
-              <a class="text-decoration-none text-secondary" href="/week"><b>Menú semanal</b></a>
-              <a class="text-decoration-none text-secondary" href="/ingredients"><b>Total ingredientes</b></a>
-            </div>
-            {% block content %}
-            {% endblock %}
+  <div class="container my-4">
+    <nav class="navbar navbar-expand-lg navbar-light nav-color">
+      <div class="container-fluid">
+
+        <h1 class="my-0">
+          <a class="text-warning text-decoration-none andika-regular-italic" href="/">foodplan</a>
+        </h1>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+
+            <li class="nav-item">
+              <a class="nav-link {% if request.path == '/' %}active{% endif %}" aria-current="page" href="/">Inicio</a>
+            </li>
+
+            <li class="nav-item">
+              {% if session.get("user_id") %}
+              <a class="nav-link {% if request.path == '/week' %}active{% endif %}" href="/week">Menú semanal</a>
+              {% else %}
+              <a class="nav-link disabled" href="">Menú semanal</a>
+              {% endif %}
+            </li>
+
+            <li class="nav-item">
+              {% if session.get("user_id") %}
+              <a class="nav-link {% if request.path == '/ingredients' %}active{% endif %}" href="/ingredients">Checklist
+                de ingredientes</a>
+              {% else %}
+              <a class="nav-link disabled" href="">Checklist de ingredientes</a>
+              {% endif %}
+            </li>
+
+            <li class="nav-item">
+              {% if session.get("user_id") %}
+              <a class="nav-link" href="/logout">Cerrar sesión</a>
+              {% else %}
+              <a class="nav-link {% if request.path == '/login' %}active{% endif %}" href="/login">Iniciar sesión</a>
+              {% endif %}
+            </li>
+
+          </ul>
         </div>
+      </div>
+    </nav>
+
+    <div class="d-flex flex-column align-items-center">
+
+      {% block content %}
+      {% endblock %}
+
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.2.0/dist/iconify-icon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.2.0/dist/iconify-icon.min.js"></script>
 
 </body>
 </html>
-
