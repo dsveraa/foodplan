@@ -30,9 +30,11 @@ class Combinacion(db.Model):
     plato_id = Column(Integer, ForeignKey('platos.id'), nullable=True)
     ensalada_id = Column(Integer, ForeignKey('ensaladas.id'), nullable=True)
     fecha = Column(DateTime)
+    user_id = Column(Integer, ForeignKey('users.id'))
 
     platos = relationship("Plato", back_populates="combinaciones")
     ensaladas = relationship("Ensalada", back_populates="combinaciones")
+    # users = relationship("User", back_populates="combinaciones")
 
 class Carbohidrato(db.Model):
     __tablename__ = 'carbohidratos'
@@ -70,3 +72,13 @@ class Unidad(db.Model):
     unidad = Column(String(10), nullable=True)
 
     plato_ingredientes = relationship("PlatoIngrediente", back_populates="unidades")
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(20))
+    username = Column(String(20))
+    password = Column(String(50))
+
+user = relationship("Combinacion", back_populates='user')

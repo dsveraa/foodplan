@@ -3,20 +3,23 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<h1>Log in</h1>
-<form class="mt-4" method="POST" action="/login">
-    <div>
-        <label for="email" class="form-label">user:</label>
-        <input type="email" class="form-control" id="email" aria-describedby="emailHelp" name="email" placeholder="e.g. david@email.com" required>
-    </div>
-    <div class="mt-4">
-        <label for="password" class="form-label">password:</label>
-        <input type="password" class="form-control" id="password" name="password" required>
-    </div>
-    <div class="mt-4 d-flex justify-content-between">
-        <a href="/new_account">New account</a>
-        <button type="submit" class="btn btn-primary">Log in</button>
-    </div>
-</form>
+
+<div class="card my-3 py-2 px-2" style="max-width: 540px; width: 350px;">
+    <h5 class="text-success">Iniciar sesión</h5>
+    <form class="mt-2" method="POST" action="/login">
+        <div>
+            <label for="email" class="form-label">usuario:</label>
+            <input type="email" class="form-control" id="email" aria-describedby="emailHelp" name="email" placeholder="ej. david@email.com" required>
+        </div>
+        <div class="mt-4">
+            <label for="password" class="form-label">contraseña:</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="mt-4 d-flex justify-content-between">
+            <a href="/register">Crear usuario</a>
+            <button type="submit" class="btn btn-primary">Validar</button>
+        </div>
+    </form>
+</div>
 
 {% endblock %}

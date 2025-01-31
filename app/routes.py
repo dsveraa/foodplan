@@ -25,6 +25,44 @@ from app.services.helpers import (
 )
 
 def register_routes(app):
+    @app.route('/register', methods=["GET", "POST"])
+    def register():
+        return redirect(url_for("index"))
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            return redirect(url_for("index"))
+        return render_template("login.html")
+
+    @app.route('/edit_preparation/<id>', methods=["GET", "POST"])
+    def edit_preparation(id):
+        '''
+        GET:
+
+        - filtrar plato por id
+        - obtener datos del plato desde tabla platos (nombre, preparación, imagen)
+
+        POST:
+
+        - reemplazar datos de preparación en tabla platos
+        '''
+
+        nombre, preparacion, imagen = obtener_plato(id)
+
+        if request.method == 'POST':
+            plato_obj = Plato.query.get_or_404(id)
+            preparacion = request.form.get('preparacion')
+            
+            if preparacion:
+                plato_obj.preparacion = preparacion
+                db.session.commit()
+            
+            return redirect(url_for("week"))
+
+        return render_template("edit_preparation.html", id=id, nombre=nombre, preparacion=preparacion, imagen=gsu(imagen))
+
+
     @app.route('/edit_ingredients/<id>', methods=["GET", "POST"])
     def edit_ingredients(id):
         '''
