@@ -318,6 +318,10 @@ def register_routes(app):
         - Agregar a resultados nuevos ingredientes
         - Si el ingrediente ya está en resultados, sumar cantidades.
         '''
+        
+        if "username" not in session:
+            return redirect(url_for('login'))
+        
         # combinaciones = Combinacion.query.order_by(Combinacion.id).all()
         combinaciones = (
             db.session.query(PlatoIngrediente)
@@ -383,6 +387,9 @@ def register_routes(app):
 
     @app.route('/week')
     def week():
+        if "username" not in session:
+            return redirect(url_for('login'))
+        
         today = datetime.now()
         dias_semana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
         inicio_semana = today - timedelta(days=today.weekday() + 1) if today.weekday() != 6 else today
