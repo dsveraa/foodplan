@@ -28,9 +28,6 @@ from app.services.helpers import (
 from .services.decorators import moderator_required
 
 def register_routes(app):
-<<<<<<< HEAD
-    @app.route('/edit_preparation/<id>', methods=["GET", "POST"])
-=======
     @app.route("/logout")
     def logout():
         session.pop("user_id", None)
@@ -124,7 +121,6 @@ def register_routes(app):
 
     @app.route('/edit_preparation/<id>', methods=["GET", "POST"])
     @moderator_required
->>>>>>> dev
     def edit_preparation(id):
         '''
         GET:
