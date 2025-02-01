@@ -22,7 +22,8 @@ from app.services.helpers import (
     obtener_plato,
     obtener_plato_ingredientes,
     obtener_unidades,
-    duplicar_PlatoIngrediente
+    duplicar_PlatoIngrediente,
+    duplicar_Combinaciones
 )
 
 from .services.decorators import moderator_required
@@ -101,18 +102,7 @@ def register_routes(app):
                 duplicar_PlatoIngrediente(ref_uid, user_id)
 
             if not existe_combinacion:
-                nuevas_combinationes = [
-                    Combinacion(plato_id=7, ensalada_id=1, dia='domingo', user_id=user_id),
-                    Combinacion(plato_id=1, ensalada_id=1, dia='lunes', user_id=user_id),
-                    Combinacion(plato_id=9, ensalada_id=2, dia='martes', user_id=user_id),
-                    Combinacion(plato_id=3, ensalada_id=2, dia='miércoles', user_id=user_id),
-                    Combinacion(plato_id=10, ensalada_id=3, dia='jueves', user_id=user_id),
-                    Combinacion(plato_id=11, ensalada_id=4, dia='viernes', user_id=user_id),
-                    Combinacion(plato_id=21, ensalada_id=2, dia='sábado', user_id=user_id),
-                ]
-                
-                db.session.bulk_save_objects(nuevas_combinationes)
-                db.session.commit()
+                duplicar_Combinaciones(ref_uid, user_id)
 
             return redirect(url_for('index'))
         

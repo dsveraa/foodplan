@@ -116,7 +116,23 @@ def duplicar_PlatoIngrediente(ref_uid, user_id):
             ingrediente_id=registro.ingrediente_id,
             cantidad=registro.cantidad,
             unidad_id=registro.unidad_id,
-            disponible=registro.disponible,
+            disponible=0,
+            user_id=user_id
+        )
+        nuevos_registros.append(nuevo_registro)
+    
+    db.session.add_all(nuevos_registros)
+    db.session.commit()
+
+def duplicar_Combinaciones(ref_uid, user_id):
+    registros_ref = Combinacion.query.filter_by(user_id=ref_uid).all()
+    
+    nuevos_registros = []
+    for registro in registros_ref:
+        nuevo_registro = Combinacion(
+            plato_id=registro.plato_id,
+            ensalada_id=registro.ensalada_id,
+            dia=registro.dia,
             user_id=user_id
         )
         nuevos_registros.append(nuevo_registro)
