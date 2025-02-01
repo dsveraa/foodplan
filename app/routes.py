@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, jsonify, session, flash
 from sqlalchemy import desc
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, with_loader_criteria
 from collections import defaultdict
 from . import db
 from .models import Plato, Ensalada, Combinacion, PlatoIngrediente, User
@@ -21,7 +21,8 @@ from app.services.helpers import (
     obtener_ingredientes,
     obtener_plato,
     obtener_plato_ingredientes,
-    obtener_unidades
+    obtener_unidades,
+    duplicar_PlatoIngrediente
 )
 
 from .services.decorators import moderator_required
@@ -92,6 +93,12 @@ def register_routes(app):
             user_id = session['user_id']
 
             existe_combinacion = Combinacion.query.filter_by(user_id=user_id).first()
+            existe_platoIngrediente = PlatoIngrediente.query.filter_by(user_id=user_id).first()
+
+            ref_uid = 1
+
+            if not existe_platoIngrediente:
+                duplicar_PlatoIngrediente(ref_uid, user_id)
 
             if not existe_combinacion:
                 nuevas_combinationes = [
@@ -142,7 +149,7 @@ def register_routes(app):
 
 
     @app.route('/edit_ingredients/<id>', methods=["GET", "POST"])
-    @moderator_required
+    # @moderator_required
     def edit_ingredients(id):
         '''
         GET:
@@ -163,6 +170,8 @@ def register_routes(app):
         ingredientes = obtener_ingredientes()
         unidades = obtener_unidades()
 
+        user_id = session['user_id']
+
         if request.method == 'POST':
             ingredientes_id = request.form.getlist('ingrediente_id[]')
             ingredientes_cantidad = request.form.getlist('ingrediente_cantidad[]')
@@ -176,7 +185,7 @@ def register_routes(app):
                     'unidad': ingredientes_unidad[i]
                 })
             
-            antiguos_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id).all()
+            antiguos_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id, user_id=user_id).all()
             
             for ingrediente in antiguos_ingredientes:
                 db.session.delete(ingrediente)
@@ -187,7 +196,8 @@ def register_routes(app):
                     ingrediente_id=ingrediente['id'], 
                     cantidad=ingrediente['cantidad'], 
                     unidad_id=ingrediente['unidad'],
-                    disponible=0
+                    disponible=0,
+                    user_id=user_id
                 ) 
                 for ingrediente in plato_ingredientes
             ]
@@ -345,6 +355,8 @@ def register_routes(app):
         if "username" not in session:
             return redirect(url_for('login'))
         
+        user_id = session['user_id']
+        
         # combinaciones = Combinacion.query.order_by(Combinacion.id).all()
         combinaciones = (
             db.session.query(PlatoIngrediente)
@@ -353,9 +365,15 @@ def register_routes(app):
                 joinedload(PlatoIngrediente.ingredientes),  
                 joinedload(PlatoIngrediente.unidades)  
             )
+            .filter(PlatoIngrediente.user_id == user_id)
             .all()
         )
-        plato_ingredientes = PlatoIngrediente.query.order_by(PlatoIngrediente.plato_id).all()
+        plato_ingredientes = (
+            PlatoIngrediente.query
+            .filter_by(user_id=user_id)
+            .order_by(PlatoIngrediente.plato_id)
+            .all()
+        )
 
         lista_ingredientes = []
 
@@ -431,8 +449,11 @@ def register_routes(app):
         combinaciones_obj = (
             Combinacion.query
             .options(
-                joinedload(Combinacion.platos).joinedload(Plato.plato_ingredientes).joinedload(PlatoIngrediente.ingredientes),
-                joinedload(Combinacion.ensaladas)
+                joinedload(Combinacion.platos)
+                .joinedload(Plato.plato_ingredientes)
+                .joinedload(PlatoIngrediente.ingredientes),
+                joinedload(Combinacion.ensaladas),
+                with_loader_criteria(PlatoIngrediente, PlatoIngrediente.user_id == user_id)
             )
             .filter_by(user_id=user_id)
             .order_by(Combinacion.id)

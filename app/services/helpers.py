@@ -1,6 +1,7 @@
 from datetime import datetime
-from app.models import Combinacion, Carbohidrato, Plato, db, Ingrediente, Unidad, PlatoIngrediente
+from app.models import Combinacion, Carbohidrato, Plato, db, Ingrediente, Unidad, PlatoIngrediente, User
 from app.utils.get_static_url import get_static_url as gsu
+from flask import session
 
 DIAS_ESP = {
     'Monday': 'lunes', 'Tuesday': 'martes', 'Wednesday': 'miércoles',
@@ -94,7 +95,31 @@ def obtener_plato(id):
     return nombre, preparacion, imagen
 
 def obtener_plato_ingredientes(id):
-    plato_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id).all()
+    '''
+    - filtra los resultados por el id del plato y user_id
+    - devuelve una lista de todos los atributos de la tabla en tantos diccionarios como ingredientes registra el plato.
+    '''
+    user_id = session['user_id']
+
+    plato_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id, user_id=user_id).all()
     plato_ingredientes = [{'id':ingrediente.id, 'ingrediente_id': ingrediente.ingrediente_id, 'nombre':ingrediente.ingredientes.nombre,'cantidad': ingrediente.cantidad, 'unidad_id': ingrediente.unidad_id, 'disponibilidad': ingrediente.disponible} for ingrediente in plato_ingredientes]
 
     return plato_ingredientes
+
+def duplicar_PlatoIngrediente(ref_uid, user_id):
+    registros_ref = PlatoIngrediente.query.filter_by(user_id=ref_uid).all()
+    
+    nuevos_registros = []
+    for registro in registros_ref:
+        nuevo_registro = PlatoIngrediente(
+            plato_id=registro.plato_id,
+            ingrediente_id=registro.ingrediente_id,
+            cantidad=registro.cantidad,
+            unidad_id=registro.unidad_id,
+            disponible=registro.disponible,
+            user_id=user_id
+        )
+        nuevos_registros.append(nuevo_registro)
+    
+    db.session.add_all(nuevos_registros)
+    db.session.commit()
