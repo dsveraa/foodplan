@@ -52,7 +52,11 @@ def manejar_domingo():
 
 def obtener_detalles_combinacion(dia_nombre_esp):
     """ Obtiene detalles del plato, ensalada, ingredientes y preparación. """
-    combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
+    if session.get('user_id'):
+        user_id = session.get('user_id')
+        combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp, user_id=user_id).first()
+    else:
+        combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp).first()
 
     if not combinacion_obj:
         return None, None, None, None, None

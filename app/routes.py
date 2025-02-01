@@ -486,8 +486,8 @@ def register_routes(app):
         dia_nombre_esp, dia_numero = obtener_dia_actual()
         dia_completo = f"{dia_nombre_esp} {dia_numero}"
 
-        if dia_nombre_esp == 'domingo':
-            manejar_domingo()
+        # if dia_nombre_esp == 'domingo':
+        #     manejar_domingo()
 
         plato, ensalada, ingredientes, preparacion, imagen = obtener_detalles_combinacion(dia_nombre_esp)
 
