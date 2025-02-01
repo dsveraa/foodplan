@@ -86,6 +86,24 @@ def register_routes(app):
             session['user_id'] = user_obj.id
             session['username'] = user_obj.username
 
+            user_id = session['user_id']
+
+            existe_combinacion = Combinacion.query.filter_by(user_id=user_id).first()
+
+            if not existe_combinacion:
+                nuevas_combinationes = [
+                    Combinacion(plato_id=7, ensalada_id=1, dia='domingo', user_id=user_id),
+                    Combinacion(plato_id=1, ensalada_id=1, dia='lunes', user_id=user_id),
+                    Combinacion(plato_id=9, ensalada_id=2, dia='martes', user_id=user_id),
+                    Combinacion(plato_id=3, ensalada_id=2, dia='miércoles', user_id=user_id),
+                    Combinacion(plato_id=10, ensalada_id=3, dia='jueves', user_id=user_id),
+                    Combinacion(plato_id=11, ensalada_id=4, dia='viernes', user_id=user_id),
+                    Combinacion(plato_id=21, ensalada_id=2, dia='sábado', user_id=user_id),
+                ]
+                
+                db.session.bulk_save_objects(nuevas_combinationes)
+                db.session.commit()
+
             return redirect(url_for('index'))
         
         return render_template("login.html")
@@ -390,6 +408,8 @@ def register_routes(app):
         if "username" not in session:
             return redirect(url_for('login'))
         
+        # ------------ esto es para obtener el día de la semana más la fecha calendario --------------
+        
         today = datetime.now()
         dias_semana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
         inicio_semana = today - timedelta(days=today.weekday() + 1) if today.weekday() != 6 else today
@@ -399,12 +419,17 @@ def register_routes(app):
             fecha = inicio_semana + timedelta(days=i)
             dias_con_fechas.append({"dia": dia, "fecha": fecha.day})
         
+        # --------------------------------------------------------------------------------------------
+
+        user_id = session.get('user_id')
+
         combinaciones_obj = (
             Combinacion.query
             .options(
                 joinedload(Combinacion.platos).joinedload(Plato.plato_ingredientes).joinedload(PlatoIngrediente.ingredientes),
                 joinedload(Combinacion.ensaladas)
             )
+            .filter_by(user_id=user_id)
             .order_by(Combinacion.id)
             .all()
         )   
