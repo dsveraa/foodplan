@@ -25,7 +25,7 @@
                     </div>
                     <div class="detalles-content" id="detalles{{ loop.index }}">
                         <div class="mt-4">
-                            <h6>Ingredientes:<a href="/edit_ingredients/{{ dia.plato_id }}"><iconify-icon class="text-secondary" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a></h6>
+                            <h6>Ingredientes:{% if session['role'] == 'moderator'%}<a href="/edit_ingredients/{{ dia.plato_id }}"><iconify-icon class="text-secondary" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a>{% endif %}</h6>
                             <ul>
                                 {% for ingrediente in dia.plato_ingredientes %}
                                     <li>{{ ingrediente.cantidad }}
@@ -35,7 +35,7 @@
                                     {% endif %} {{ ingrediente.nombre }}</li>
                                 {% endfor %}
                             </ul>
-                            <h6>Preparación:<a href="/edit_preparation/{{ dia.plato_id }}"><iconify-icon class="text-secondary" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a></h6>
+                            <h6>Preparación:{% if session['role'] == 'moderator'%}<a href="/edit_preparation/{{ dia.plato_id }}"> <iconify-icon class="text-secondary" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a>{% endif %}</h6>
                             <p>{{ dia.plato_preparacion }}</p>
                         </div>
                     </div>

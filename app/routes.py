@@ -24,6 +24,8 @@ from app.services.helpers import (
     obtener_unidades
 )
 
+from .services.decorators import moderator_required
+
 def register_routes(app):
     @app.route("/logout")
     def logout():
@@ -85,6 +87,7 @@ def register_routes(app):
             
             session['user_id'] = user_obj.id
             session['username'] = user_obj.username
+            session['role'] = user_obj.role
 
             user_id = session['user_id']
 
@@ -110,6 +113,7 @@ def register_routes(app):
 
 
     @app.route('/edit_preparation/<id>', methods=["GET", "POST"])
+    @moderator_required
     def edit_preparation(id):
         '''
         GET:
@@ -138,6 +142,7 @@ def register_routes(app):
 
 
     @app.route('/edit_ingredients/<id>', methods=["GET", "POST"])
+    @moderator_required
     def edit_ingredients(id):
         '''
         GET:

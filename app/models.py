@@ -79,5 +79,6 @@ class User(db.Model):
     id = Column(Integer, primary_key=True)
     username = Column(String(20))
     password = Column(String(250))
+    role = Column(String(20), default='user')
 
 user = relationship("Combinacion", back_populates='user')
