@@ -1,9 +1,9 @@
 from flask import render_template, request, redirect, url_for, jsonify, session, flash
 from sqlalchemy import desc
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, with_loader_criteria
 from collections import defaultdict
 from . import db
-from .models import Plato, Ensalada, Combinacion, PlatoIngrediente
+from .models import Plato, Ensalada, Combinacion, PlatoIngrediente, User
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -21,11 +21,110 @@ from app.services.helpers import (
     obtener_ingredientes,
     obtener_plato,
     obtener_plato_ingredientes,
-    obtener_unidades
+    obtener_unidades,
+    duplicar_PlatoIngrediente
 )
 
+from .services.decorators import moderator_required
+
 def register_routes(app):
+<<<<<<< HEAD
     @app.route('/edit_preparation/<id>', methods=["GET", "POST"])
+=======
+    @app.route("/logout")
+    def logout():
+        session.pop("user_id", None)
+        session.pop("username", None)
+        return redirect(url_for("index"))
+    
+    @app.route('/register', methods=["GET", "POST"])
+    def register():
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            repeat_password = request.form['repeat_password']
+
+            if password != repeat_password:
+                flash('Las contraseñas no coinciden', 'warning')
+                return render_template("register.html", username=username)
+            
+            if User.query.filter_by(username=username).first():
+                flash('El usuario ya existe', 'warning')
+                return render_template("register.html", username=username)
+            
+            password_hash = generate_password_hash(password)
+
+            new_user = User(username=username, password=password_hash)
+
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                flash('Usuario registrado correctamente', 'success')
+                return redirect(url_for("login"))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error al registrar el usuario: {e}', 'danger')
+                return render_template("register.html", username=username)
+            
+        return render_template("register.html")
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+
+            try:
+                user_obj = User.query.filter_by(username=username).first()
+
+                if user_obj is None:
+                    flash(f"El usuario '{username}' no existe todavía.", 'warning')
+                    return render_template("login.html", username=username)
+                    
+                if not check_password_hash(user_obj.password, password):
+                    flash(f"La contraseña para '{username}' es incorrecta.", 'danger')
+                    return render_template("login.html", username=username)
+                    
+            except Exception as e:
+                flash(f'Ocurrió un problema, intente nuevamente: {e}', 'danger')
+                return render_template("login.html", username=username)
+            
+            session['user_id'] = user_obj.id
+            session['username'] = user_obj.username
+            session['role'] = user_obj.role
+
+            user_id = session['user_id']
+
+            existe_combinacion = Combinacion.query.filter_by(user_id=user_id).first()
+            existe_platoIngrediente = PlatoIngrediente.query.filter_by(user_id=user_id).first()
+
+            ref_uid = 1
+
+            if not existe_platoIngrediente:
+                duplicar_PlatoIngrediente(ref_uid, user_id)
+
+            if not existe_combinacion:
+                nuevas_combinationes = [
+                    Combinacion(plato_id=7, ensalada_id=1, dia='domingo', user_id=user_id),
+                    Combinacion(plato_id=1, ensalada_id=1, dia='lunes', user_id=user_id),
+                    Combinacion(plato_id=9, ensalada_id=2, dia='martes', user_id=user_id),
+                    Combinacion(plato_id=3, ensalada_id=2, dia='miércoles', user_id=user_id),
+                    Combinacion(plato_id=10, ensalada_id=3, dia='jueves', user_id=user_id),
+                    Combinacion(plato_id=11, ensalada_id=4, dia='viernes', user_id=user_id),
+                    Combinacion(plato_id=21, ensalada_id=2, dia='sábado', user_id=user_id),
+                ]
+                
+                db.session.bulk_save_objects(nuevas_combinationes)
+                db.session.commit()
+
+            return redirect(url_for('index'))
+        
+        return render_template("login.html")
+
+
+    @app.route('/edit_preparation/<id>', methods=["GET", "POST"])
+    @moderator_required
+>>>>>>> dev
     def edit_preparation(id):
         '''
         GET:
@@ -54,6 +153,7 @@ def register_routes(app):
 
 
     @app.route('/edit_ingredients/<id>', methods=["GET", "POST"])
+    # @moderator_required
     def edit_ingredients(id):
         '''
         GET:
@@ -74,6 +174,8 @@ def register_routes(app):
         ingredientes = obtener_ingredientes()
         unidades = obtener_unidades()
 
+        user_id = session['user_id']
+
         if request.method == 'POST':
             ingredientes_id = request.form.getlist('ingrediente_id[]')
             ingredientes_cantidad = request.form.getlist('ingrediente_cantidad[]')
@@ -87,7 +189,7 @@ def register_routes(app):
                     'unidad': ingredientes_unidad[i]
                 })
             
-            antiguos_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id).all()
+            antiguos_ingredientes = PlatoIngrediente.query.filter_by(plato_id=id, user_id=user_id).all()
             
             for ingrediente in antiguos_ingredientes:
                 db.session.delete(ingrediente)
@@ -98,7 +200,8 @@ def register_routes(app):
                     ingrediente_id=ingrediente['id'], 
                     cantidad=ingrediente['cantidad'], 
                     unidad_id=ingrediente['unidad'],
-                    disponible=0
+                    disponible=0,
+                    user_id=user_id
                 ) 
                 for ingrediente in plato_ingredientes
             ]
@@ -252,6 +355,12 @@ def register_routes(app):
         - Agregar a resultados nuevos ingredientes
         - Si el ingrediente ya está en resultados, sumar cantidades.
         '''
+        
+        if "username" not in session:
+            return redirect(url_for('login'))
+        
+        user_id = session['user_id']
+        
         # combinaciones = Combinacion.query.order_by(Combinacion.id).all()
         combinaciones = (
             db.session.query(PlatoIngrediente)
@@ -260,9 +369,15 @@ def register_routes(app):
                 joinedload(PlatoIngrediente.ingredientes),  
                 joinedload(PlatoIngrediente.unidades)  
             )
+            .filter(PlatoIngrediente.user_id == user_id)
             .all()
         )
-        plato_ingredientes = PlatoIngrediente.query.order_by(PlatoIngrediente.plato_id).all()
+        plato_ingredientes = (
+            PlatoIngrediente.query
+            .filter_by(user_id=user_id)
+            .order_by(PlatoIngrediente.plato_id)
+            .all()
+        )
 
         lista_ingredientes = []
 
@@ -317,6 +432,11 @@ def register_routes(app):
 
     @app.route('/week')
     def week():
+        if "username" not in session:
+            return redirect(url_for('login'))
+        
+        # ------------ esto es para obtener el día de la semana más la fecha calendario --------------
+        
         today = datetime.now()
         dias_semana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
         inicio_semana = today - timedelta(days=today.weekday() + 1) if today.weekday() != 6 else today
@@ -326,12 +446,20 @@ def register_routes(app):
             fecha = inicio_semana + timedelta(days=i)
             dias_con_fechas.append({"dia": dia, "fecha": fecha.day})
         
+        # --------------------------------------------------------------------------------------------
+
+        user_id = session.get('user_id')
+
         combinaciones_obj = (
             Combinacion.query
             .options(
-                joinedload(Combinacion.platos).joinedload(Plato.plato_ingredientes).joinedload(PlatoIngrediente.ingredientes),
-                joinedload(Combinacion.ensaladas)
+                joinedload(Combinacion.platos)
+                .joinedload(Plato.plato_ingredientes)
+                .joinedload(PlatoIngrediente.ingredientes),
+                joinedload(Combinacion.ensaladas),
+                with_loader_criteria(PlatoIngrediente, PlatoIngrediente.user_id == user_id)
             )
+            .filter_by(user_id=user_id)
             .order_by(Combinacion.id)
             .all()
         )   
@@ -367,6 +495,8 @@ def register_routes(app):
 
     @app.route('/')
     def index():
+        usuario = session.get('username')
+
         dia_nombre_esp, dia_numero = obtener_dia_actual()
         dia_completo = f"{dia_nombre_esp} {dia_numero}"
 
@@ -382,5 +512,6 @@ def register_routes(app):
             ensalada=ensalada,
             ingredientes=ingredientes,
             preparacion=preparacion,
-            imagen=imagen
+            imagen=imagen,
+            user = usuario
         )

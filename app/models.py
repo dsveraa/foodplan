@@ -30,9 +30,11 @@ class Combinacion(db.Model):
     plato_id = Column(Integer, ForeignKey('platos.id'), nullable=True)
     ensalada_id = Column(Integer, ForeignKey('ensaladas.id'), nullable=True)
     fecha = Column(DateTime)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
 
     platos = relationship("Plato", back_populates="combinaciones")
     ensaladas = relationship("Ensalada", back_populates="combinaciones")
+    # users = relationship("User", back_populates="combinaciones", cascade='all, delete')
 
 class Carbohidrato(db.Model):
     __tablename__ = 'carbohidratos'
@@ -57,6 +59,7 @@ class PlatoIngrediente(db.Model):
     cantidad = Column(Integer)
     unidad_id = Column(Integer, ForeignKey('unidades.id'), nullable=True)
     disponible = Column(Boolean, default=False, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
 
     platos = relationship("Plato", back_populates="plato_ingredientes")
     ingredientes = relationship('Ingrediente', back_populates="plato_ingredientes")
@@ -70,3 +73,14 @@ class Unidad(db.Model):
     unidad = Column(String(10), nullable=True)
 
     plato_ingredientes = relationship("PlatoIngrediente", back_populates="unidades")
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(20))
+    password = Column(String(250))
+    role = Column(String(20), default='user')
+
+user = relationship("Combinacion", back_populates='user')
+user = relationship("PlatoIngrediente", back_populates='user')

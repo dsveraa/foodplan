@@ -12,7 +12,7 @@
     <div class="row g-0">
         <div class="col-md-12">
             <div class="card-body">
-                <h5 class="card-title text-success">Total ingredientes:</h5>
+                <h5 class="card-title text-success">Checklist de ingredientes:</h5>
                 <div class="mt-4">
                     <ul class="list-unstyled">
                         {% for item in resultados %}
@@ -88,23 +88,3 @@
 </script>
 
 {% endblock %}
-
-
-{#
-
-si la unidad es 'cda', 'poco', 'chorrito', 'diente', 'cdita':
-mostrar ingrediente
-
-sino:
-mostrar cantidad
-si la unidad no es 'unidad':
-mostrar unidad
-si la cantidad es mayor a 1 y menor a 20:
-si la unidad termina con vocal:
-agregar 's'
-sino:
-agregar 'es'
-mostrar 'de'
-mostrar ingrediente
-
-#}
