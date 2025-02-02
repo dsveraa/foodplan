@@ -49,24 +49,34 @@
         document.getElementById("repeat_password").type = isVisible ? "text" : "password";
     }
 
-    // Evento para cuando se presiona un ícono
+    // Función para manejar el mostrar contraseña
+    function handleShow(e) {
+        if (e.type === 'touchstart') e.preventDefault();
+        togglePasswords(true);
+        eyeIcons.forEach(i => i.classList.replace("fa-eye", "fa-eye-slash"));
+        
+        // Para dispositivos táctiles, agregar listener de fin de touch
+        if (e.type === 'touchstart') {
+            document.addEventListener('touchend', handleHide, {once: true});
+        }
+    }
+
+    // Función para manejar el ocultar contraseña
+    function handleHide(e) {
+        if (e.type === 'touchend') e.preventDefault();
+        togglePasswords(false);
+        eyeIcons.forEach(i => i.classList.replace("fa-eye-slash", "fa-eye"));
+    }
+
+    // Eventos para cada ícono
     eyeIcons.forEach(icon => {
-        icon.addEventListener("mousedown", () => {
-            togglePasswords(true); // Mostrar contraseñas
-            eyeIcons.forEach(i => i.classList.replace("fa-eye", "fa-eye-slash")); // Cambiar íconos
-        });
+        // Eventos de inicio (mostrar)
+        icon.addEventListener('mousedown', handleShow);
+        icon.addEventListener('touchstart', handleShow);
 
-        // Evento para cuando se suelta un ícono
-        icon.addEventListener("mouseup", () => {
-            togglePasswords(false); // Ocultar contraseñas
-            eyeIcons.forEach(i => i.classList.replace("fa-eye-slash", "fa-eye")); // Cambiar íconos
-        });
-
-        // Evento para cuando el mouse sale del ícono
-        icon.addEventListener("mouseleave", () => {
-            togglePasswords(false); // Ocultar contraseñas
-            eyeIcons.forEach(i => i.classList.replace("fa-eye-slash", "fa-eye")); // Cambiar íconos
-        });
+        // Eventos de fin (ocultar)
+        icon.addEventListener('mouseup', handleHide);
+        icon.addEventListener('mouseleave', handleHide);
     });
 </script>
 
