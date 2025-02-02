@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, jsonify, session, flash
-from sqlalchemy import desc
+from sqlalchemy import desc, and_
 from sqlalchemy.orm import joinedload, with_loader_criteria
 from collections import defaultdict
 from . import db
@@ -346,39 +346,39 @@ def register_routes(app):
             return redirect(url_for('login'))
         
         user_id = session['user_id']
+
+        # user_id = 6 # temporal
         
-        # combinaciones = Combinacion.query.order_by(Combinacion.id).all()
-        combinaciones = (
-            db.session.query(PlatoIngrediente)
-            .join(Combinacion, Combinacion.plato_id == PlatoIngrediente.plato_id)
-            .options(
-                joinedload(PlatoIngrediente.ingredientes),  
-                joinedload(PlatoIngrediente.unidades)  
-            )
-            .filter(PlatoIngrediente.user_id == user_id)
-            .all()
-        )
+        combinaciones_obj = Combinacion.query.filter_by(user_id=user_id).all()
+
+        id_platos = [plato.plato_id for plato in combinaciones_obj]
+        
         plato_ingredientes = (
             PlatoIngrediente.query
-            .filter_by(user_id=user_id)
-            .order_by(PlatoIngrediente.plato_id)
+            .options(
+                joinedload(PlatoIngrediente.ingredientes), # <-- 
+                joinedload(PlatoIngrediente.unidades), # <--
+            )
+            .filter(
+                and_(
+                    PlatoIngrediente.user_id == user_id,
+                    PlatoIngrediente.plato_id.in_(id_platos)
+                )
+            )
             .all()
         )
 
-        lista_ingredientes = []
-
-        for plato_ingrediente in plato_ingredientes:
-            for combinacion in combinaciones:
-                if plato_ingrediente.plato_id == combinacion.plato_id:
-                    lista_ingredientes.append({
+        lista_ingredientes = [{
                         'id': plato_ingrediente.id,
-                        'ingrediente': plato_ingrediente.ingredientes.nombre,
+                        'ingrediente': plato_ingrediente.ingredientes.nombre, # -->
                         'cantidad': plato_ingrediente.cantidad,
-                        'unidad': plato_ingrediente.unidades.unidad,
+                        'unidad': plato_ingrediente.unidades.unidad, # -->
                         'disponibilidad': plato_ingrediente.disponible
-                    })
-                    break
+                    }
+                    for plato_ingrediente in plato_ingredientes] 
         
+        print(lista_ingredientes)
+
         resultados = []
 
         for ingrediente in lista_ingredientes:
@@ -401,9 +401,10 @@ def register_routes(app):
         
         resultados.sort(key=lambda ing: (ing["unidad"] in ['cda', 'poco', 'chorrito', 'diente', 'cdita'], ing["ingrediente"]))
 
-        # pprint.pprint(resultados)
+        pprint.pprint(resultados)
 
         return render_template("total_ingredients.html", resultados=resultados)
+        # return jsonify({"status": 'success'}), 200
     
     @app.route('/cambiar_estado/<item_id>', methods=["POST"])
     def cambiar_estado(item_id):
