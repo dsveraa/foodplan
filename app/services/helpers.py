@@ -56,7 +56,8 @@ def obtener_detalles_combinacion(dia_nombre_esp):
         user_id = session.get('user_id')
         combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp, user_id=user_id).first()
     else:
-        combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp, user_id=1).first()
+        user_id = 1
+        combinacion_obj = Combinacion.query.filter_by(dia=dia_nombre_esp, user_id=user_id).first()
 
     if not combinacion_obj:
         return None, None, None, None, None
@@ -67,11 +68,14 @@ def obtener_detalles_combinacion(dia_nombre_esp):
     ingredientes = []
     if combinacion_obj.platos:
         for plato_ingrediente in combinacion_obj.platos.plato_ingredientes:
-            ingredientes.append({
-                "nombre": plato_ingrediente.ingredientes.nombre,
-                "cantidad": plato_ingrediente.cantidad,         
-                "unidad": plato_ingrediente.unidades.unidad     
-            })
+            if plato_ingrediente.user_id == user_id:
+                ingredientes.append({
+                    "nombre": plato_ingrediente.ingredientes.nombre,
+                    "cantidad": plato_ingrediente.cantidad,
+                    "unidad": plato_ingrediente.unidades.unidad
+                })
+
+
 
     preparacion = combinacion_obj.platos.preparacion if combinacion_obj.platos else None
     imagen_url = gsu(combinacion_obj.platos.imagen) if combinacion_obj.platos else None

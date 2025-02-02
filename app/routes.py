@@ -482,7 +482,7 @@ def register_routes(app):
     @app.route('/')
     def index():
         usuario = session.get('username')
-
+        
         dia_nombre_esp, dia_numero = obtener_dia_actual()
         dia_completo = f"{dia_nombre_esp} {dia_numero}"
 
@@ -490,6 +490,8 @@ def register_routes(app):
         #     manejar_domingo()
 
         plato, ensalada, ingredientes, preparacion, imagen = obtener_detalles_combinacion(dia_nombre_esp)
+
+        print(ingredientes)
 
         return render_template(
             "index.html",
