@@ -407,6 +407,9 @@ def register_routes(app):
     
     @app.route('/cambiar_estado/<item_id>', methods=["POST"])
     def cambiar_estado(item_id):
+        if not session.get('user_id'):
+            return jsonify({'error': 'Se necesita autenticación'}), 401
+        
         item_obj = PlatoIngrediente.query.filter_by(id=item_id).first()
         
         if item_obj:
