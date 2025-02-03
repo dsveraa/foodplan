@@ -82,6 +82,9 @@
   .eye-icon:hover {
     color: #000;
   }
+  .nav-link {
+    margin-right: 25px;
+  }
 </style>
 </head>
 
@@ -101,12 +104,20 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item d-flex align-items-center text-warning">
+              {% if session.get("user_id") %}
+              <iconify-icon class="me-1" icon="mdi:account-circle" width="24" height="24"></iconify-icon>
+              <a class="nav-link text-warning">{{ session.get("username")}}</a>
+              {% endif %}
+            </li>
 
-            <li class="nav-item">
+            <li class="nav-item d-flex align-items-center">
+              <iconify-icon class="text-secondary me-1" icon="mdi:home" width="24" height="24"></iconify-icon>
               <a class="nav-link {% if request.path == '/' %}active{% endif %}" aria-current="page" href="/">Inicio</a>
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item d-flex align-items-center">
+              <iconify-icon class="text-secondary me-1" icon="mdi:calendar-month" width="24" height="24"></iconify-icon>
               {% if session.get("user_id") %}
               <a class="nav-link {% if request.path == '/week' %}active{% endif %}" href="/week">Menú semanal</a>
               {% else %}
@@ -114,7 +125,8 @@
               {% endif %}
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item d-flex align-items-center">
+              <iconify-icon class="text-secondary me-1" icon="mdi:invoice-text-check" width="24" height="24"></iconify-icon>
               {% if session.get("user_id") %}
               <a class="nav-link {% if request.path == '/ingredients' %}active{% endif %}" href="/ingredients">Lista de compras</a>
               {% else %}
@@ -122,14 +134,16 @@
               {% endif %}
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item d-flex align-items-center">
               {% if session.get("user_id") %}
+              <iconify-icon class="text-secondary me-1" icon="mdi:account-off" width="24" height="24"></iconify-icon>
               <a class="nav-link" href="/logout">Cerrar sesión</a>
               {% else %}
+              <iconify-icon class="text-secondary me-1" icon="mdi:account-check" width="24" height="24"></iconify-icon>
               <a class="nav-link {% if request.path == '/login' %}active{% endif %}" href="/login">Iniciar sesión</a>
               {% endif %}
             </li>
-
+            
           </ul>
         </div>
       </div>
