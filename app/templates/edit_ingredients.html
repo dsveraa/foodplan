@@ -21,6 +21,9 @@
                     <div id="ingredientes-container">
                         {% for plato_ingrediente in plato_ingredientes %}
                         <div class="ingrediente-form d-flex justify-content-between gap-1">
+                            <div class="mt-2">
+                                <iconify-icon class="cursor-pointer" icon="hugeicons:minus-sign-circle" width="24" height="24" onclick="eliminarFila(this)"></iconify-icon>
+                            </div>
                             <div>
                                 <select class="form-control" name="ingrediente_id[]" required>
                                     <option value="">Seleccionar...</option>
@@ -43,7 +46,7 @@
                                     <option value="{{ i }}" {% if i==plato_ingrediente.cantidad %}selected{% endif %}>{{
                                         i }}</option>
                                     {% endfor %}
-                                    {% for i in range(150, 751, 50) %}
+                                    {% for i in range(150, 951, 50) %}
                                     <option value="{{ i }}" {% if i==plato_ingrediente.cantidad %}selected{% endif %}>{{
                                         i }}</option>
                                     {% endfor %}
@@ -65,10 +68,7 @@
                     </div>
                     <div class="d-flex mt-4 justify-content-between">
                         <div>
-                            <iconify-icon class="cursor-pointer" icon="hugeicons:add-circle" width="36" height="36"
-                                onclick="agregarIngrediente()"></iconify-icon>
-                            <iconify-icon class="cursor-pointer" icon="hugeicons:minus-sign-circle" width="36"
-                                height="36" onclick="eliminarUltimoIngrediente()"></iconify-icon>
+                            <iconify-icon class="cursor-pointer" icon="hugeicons:add-circle" width="24" height="24" onclick="agregarIngrediente()"></iconify-icon>
                         </div>
                         <div class="d-flex gap-2">
                             <a href="/week" class="mt-2 pe-2">Cancelar</a>
@@ -82,11 +82,18 @@
 </div>
 
 <script>
+    function eliminarFila(boton) {
+        const fila = boton.closest('.ingrediente-form'); // Encuentra la fila contenedora del botón
+        if (fila) {
+            fila.remove(); // Elimina la fila
+        }
+    }
+
     function configurarPluralizacion(container) {
         const cantidadSelects = container.querySelectorAll('select[name="ingrediente_cantidad[]"]')
         const unidadSelects = container.querySelectorAll('select[name="ingrediente_unidad[]"]')
 
-        const excluidos = ["cc", "g", "poco"]
+        const excluidos = ["cc", "g", "poco", "kg"]
 
         function actualizarUnidad(cantidadSelect, unidadSelect) {
             const cantidad = parseInt(cantidadSelect.value) || 0
@@ -121,6 +128,9 @@
         nuevoIngrediente.classList.add("ingrediente-form", "d-flex", "justify-content-between", "gap-1")
 
         nuevoIngrediente.innerHTML = `
+            <div class="mt-2">
+                <iconify-icon class="cursor-pointer" icon="hugeicons:minus-sign-circle" width="24" height="24" onclick="eliminarFila(this)"></iconify-icon>
+            </div>
             <div>
                 <select class="form-control" name="ingrediente_id[]" required>
                     <option value="">Seleccionar...</option>
@@ -161,15 +171,6 @@
         container.appendChild(nuevoIngrediente)
 
         configurarPluralizacion(nuevoIngrediente)
-    }
-
-
-    function eliminarUltimoIngrediente() {
-        const ingredientes = document.querySelectorAll(".ingrediente-form")
-
-        if (ingredientes.length > 1) {
-            ingredientes[ingredientes.length - 1].remove() // Elimina el último elemento
-        }
     }
 
 </script>
