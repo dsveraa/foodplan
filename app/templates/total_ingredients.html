@@ -34,7 +34,7 @@
                                     {{ item.cantidad }}
 
                                     {% if item.unidad != "unidad" %}
-                                    {{ item.unidad }}{% if item.cantidad > 1 and item.cantidad < 20 %}{% if
+                                    {{ item.unidad }}{% if item.cantidad|float > 1 and item.cantidad|float < 20 %}{% if
                                         item.unidad[-1] in ['a', 'e' , 'i' , 'o' , 'u' ] %}s{% else %}es{% endif %} {%
                                         endif %} de {% endif %} {{ item.ingrediente }} {% endif %} </div>
                                 </div>

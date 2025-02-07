@@ -1,4 +1,6 @@
 from datetime import datetime
+from fractions import Fraction
+import math
 from app.models import Combinacion, Carbohidrato, Plato, db, Ingrediente, Unidad, PlatoIngrediente, User
 from app.utils.get_static_url import get_static_url as gsu
 from flask import session
@@ -147,3 +149,47 @@ def duplicar_Combinaciones(ref_uid, user_id):
     
     db.session.add_all(nuevos_registros)
     db.session.commit()
+
+def map_porciones(porciones):
+    mapeo = {
+        1: 0.3333333333333333, 
+        2: 0.6666666666666666, 
+        3: 1, 
+        4: 1.3333333333333333, 
+        5: 1.6666666666666666, 
+        6: 2, 
+        7: 2.3333333333333333,
+        8: 2.6666666666666666, 
+        9: 3,
+    }
+    return list(map(lambda p: mapeo.get(p, p), porciones))
+
+def formatear_cantidad(n):
+    fracciones = {0.3: "⅓", 0.6: "⅔"}
+    resultado = math.floor(float(n) * 10) / 10
+    entero = int(resultado)
+    decimal = resultado - entero
+
+    if decimal == 0:
+        return str(entero)
+    
+    if entero > 0:
+        fraccion = fracciones.get(round(decimal, 2))
+        if fraccion:
+            return f"{entero} {fraccion}"
+        
+        fraccion = Fraction(decimal).limit_denominator(8)
+        return f"{entero} {fraccion}"
+
+    fraccion = fracciones.get(round(decimal, 2))
+    if fraccion:
+        return f"{fraccion}"
+    
+    fraccion = Fraction(decimal).limit_denominator(8)
+    return f"{fraccion}"
+
+def redondear_a_decena_inferior(n):
+    return math.floor(n / 10) * 10
+
+def mult_cantidad_ingrediente(cantidad, multiplicador, unidad):
+    return cantidad * multiplicador if unidad != 'poco' else cantidad

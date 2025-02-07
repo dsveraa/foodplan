@@ -13,7 +13,15 @@
             </div>
             <div class="col-md-8">
                 <div class="card-body">
-                    <h5 class="card-title text-success">{{ dia.dia }} {{ dia.fecha }} <a href="/combination/{{ dia.id }}"><iconify-icon class="text-success" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a></h5>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-success">{{ dia.dia }} {{ dia.fecha }} <a href="/combination/{{ dia.id }}"><iconify-icon class="text-success" icon="pepicons-pencil:pen" width="20" height="20"></iconify-icon></a></h5>
+                        </div>
+                        <div>
+                            Porciones: <span class="text-primary"><strong>{{ dia.porciones }}</strong></span>
+                        </div>
+                    </div>
+                   
                     <div class="d-flex align-items-center justify-content-between">
                         <p class="card-text flex-grow-1 mb-0">
                             {{ dia.plato_nombre }} y ensalada de {{ dia.ensalada_nombre }}
@@ -29,7 +37,7 @@
                             <ul>
                                 {% for ingrediente in dia.plato_ingredientes %}
                                     <li>{{ ingrediente.cantidad }}
-                                    {% if ingrediente.unidad != "unidad" %} {{ ingrediente.unidad }}{% if ingrediente.cantidad > 1 and ingrediente.cantidad < 20 and ingrediente.unidad %}{% if ingrediente.unidad.endswith(('a', 'e', 'i', 'o', 'u'))%}s{% else %}es
+                                    {% if ingrediente.unidad != "unidad" %} {{ ingrediente.unidad }}{% if ingrediente.cantidad|float > 1 and ingrediente.cantidad|float < 20 and ingrediente.unidad %}{% if ingrediente.unidad.endswith(('a', 'e', 'i', 'o', 'u'))%}s{% else %}es
                                             {% endif %}
                                         {% endif %} de
                                     {% endif %} {{ ingrediente.nombre }}</li>

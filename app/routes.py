@@ -15,19 +15,21 @@ from .utils.debugging import printn
 from .utils.get_static_url import get_static_url as gsu
 from .utils.image_processing import allowed_file
 from app.services.helpers import (
+    formatear_cantidad,
+    map_porciones,
+    mult_cantidad_ingrediente,
     obtener_dia_actual,
-    manejar_domingo,
     obtener_detalles_combinacion,
     obtener_ingredientes,
     obtener_plato,
     obtener_plato_ingredientes,
     obtener_unidades,
     duplicar_PlatoIngrediente,
-    duplicar_Combinaciones
+    duplicar_Combinaciones,
+    redondear_a_decena_inferior
 )
 
 from .services.decorators import moderator_required
-from typing import List, Dict
 
 def register_routes(app):
     @app.route("/logout")
@@ -295,11 +297,13 @@ def register_routes(app):
         dia_id = request.form.get('dia_id')
         plato_id = request.form.get('plato_id')
         ensalada_id = request.form.get('ensalada_id')
+        porciones = request.form.get('porciones')
 
         combinacion = Combinacion.query.get(dia_id)
 
         combinacion.plato_id = plato_id
         combinacion.ensalada_id = ensalada_id
+        combinacion.porciones = porciones
         db.session.commit()
 
         return redirect("week")
@@ -314,12 +318,19 @@ def register_routes(app):
         - seleccionar plato y ensalada
         - aplicar a combinación por id (/change_combination, methods=[POST])
         '''
+        user_id = session.get("user_id")
         platos_obj = Plato.query.order_by(Plato.id).all()
         ensaladas_obj = Ensalada.query.order_by(Ensalada.id).all()
         combinacion_obj = Combinacion.query.get(combinacion_id)
+        porciones_obj = Combinacion.query.filter_by(user_id=user_id)
+
+        posibles_porciones = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
         platos = [{'id': plato.id, 'nombre': plato.nombre} for plato in platos_obj]
         ensaladas = [{'id': ensalada.id, 'nombre': ensalada.nombre} for ensalada in ensaladas_obj]
+        porciones = [porcion.porciones for porcion in porciones_obj]
+        print(f"porciones: {porciones}")
+
         combinacion = {
             'id': combinacion_obj.id, 
             'plato': combinacion_obj.platos.nombre, 
@@ -327,10 +338,11 @@ def register_routes(app):
             'dia': combinacion_obj.dia, 
             'imagen': gsu(combinacion_obj.platos.imagen), 
             'plato_actual_id': combinacion_obj.plato_id, 
-            'ensalada_actual_id': combinacion_obj.ensalada_id }
+            'ensalada_actual_id': combinacion_obj.ensalada_id,
+            'porciones': combinacion_obj.porciones
+        }
 
-        return render_template("change_combination.html", platos=platos, ensaladas=ensaladas, combinacion=combinacion)
-        # return jsonify({'platos': platos, 'ensaladas': ensaladas, 'combinacion': combinacion}), 200
+        return render_template("change_combination.html", platos=platos, ensaladas=ensaladas, combinacion=combinacion, posibles_porciones=posibles_porciones)
     
     @app.route('/ingredients')
     def ingredients():
@@ -348,17 +360,29 @@ def register_routes(app):
         
         user_id = session['user_id']
 
-        # user_id = 6 # temporal
-        
-        combinaciones_obj = Combinacion.query.filter_by(user_id=user_id).all()
+        # 1. Consulta las combinaciones y extrae sus multiplicadores
+        dias_ordenados = case(
+            (Combinacion.dia == "domingo", 1),
+            (Combinacion.dia == "lunes", 2),
+            (Combinacion.dia == "martes", 3),
+            (Combinacion.dia == "miércoles", 4),
+            (Combinacion.dia == "jueves", 5),
+            (Combinacion.dia == "viernes", 6),
+            (Combinacion.dia == "sábado", 7),
+        )
 
-        id_platos = [plato.plato_id for plato in combinaciones_obj]
-        
+        combinaciones_obj = Combinacion.query.filter_by(user_id=user_id).order_by(dias_ordenados).all()
+
+        id_platos = [combinacion.plato_id for combinacion in combinaciones_obj]
+
+        porciones = [combinacion.porciones for combinacion in combinaciones_obj]
+        multiplicador = map_porciones(porciones)
+
         plato_ingredientes = (
             PlatoIngrediente.query
             .options(
-                joinedload(PlatoIngrediente.ingredientes), # <-- 
-                joinedload(PlatoIngrediente.unidades), # <--
+                joinedload(PlatoIngrediente.ingredientes),
+                joinedload(PlatoIngrediente.unidades),
             )
             .filter(
                 and_(
@@ -369,28 +393,40 @@ def register_routes(app):
             .all()
         )
 
-        lista_ingredientes = [{
-                        'id': plato_ingrediente.id,
-                        'ingrediente': plato_ingrediente.ingredientes.nombre, # -->
-                        'cantidad': plato_ingrediente.cantidad,
-                        'unidad': plato_ingrediente.unidades.unidad, # -->
-                        'disponibilidad': plato_ingrediente.disponible
-                    }
-                    for plato_ingrediente in plato_ingredientes] 
-        
-        print(lista_ingredientes)
+        lista_ingredientes = []
+
+        for i, combinacion in enumerate(combinaciones_obj):
+            plato_id_actual = combinacion.plato_id
+
+            ingredientes_plato_actual = [
+                pi for pi in plato_ingredientes 
+                if pi.plato_id == plato_id_actual
+            ]
+            
+            for plato_ingrediente in ingredientes_plato_actual:
+                cantidad = mult_cantidad_ingrediente(
+                    plato_ingrediente.cantidad, 
+                    multiplicador[i], 
+                    plato_ingrediente.unidades.unidad
+                )
+                
+                lista_ingredientes.append({   
+                    'id': plato_ingrediente.id,
+                    'ingrediente': plato_ingrediente.ingredientes.nombre,
+                    'cantidad': cantidad,
+                    'unidad': plato_ingrediente.unidades.unidad,
+                    'disponibilidad': plato_ingrediente.disponible
+                })
 
         resultados = []
-
         for ingrediente in lista_ingredientes:
             encontrado = False
-
             for resultado in resultados:
-                if resultado['ingrediente'] == ingrediente['ingrediente'] and resultado['unidad'] == ingrediente['unidad']:
+                if (resultado['ingrediente'] == ingrediente['ingrediente'] and 
+                    resultado['unidad'] == ingrediente['unidad']):
                     resultado['cantidad'] += ingrediente['cantidad']
                     encontrado = True
                     break
-
             if not encontrado:
                 resultados.append({
                     'id': ingrediente['id'],
@@ -399,13 +435,20 @@ def register_routes(app):
                     'unidad': ingrediente['unidad'],
                     'disponibilidad': ingrediente['disponibilidad']
                 })
-        
+
+        for resultado in resultados:
+            cantidad = resultado['cantidad']
+            unidad = resultado['unidad']
+            
+            if unidad == 'g':
+                cantidad = redondear_a_decena_inferior(cantidad)
+            
+            resultado['cantidad'] = formatear_cantidad(cantidad)
+
         resultados.sort(key=lambda ing: (ing["unidad"] in ['cda', 'poco', 'chorrito', 'diente', 'cdita'], ing["ingrediente"]))
 
-        pprint.pprint(resultados)
-
         return render_template("total_ingredients.html", resultados=resultados)
-        # return jsonify({"status": 'success'}), 200
+
     
     @app.route('/cambiar_estado/<item_id>', methods=["POST"])
     def cambiar_estado(item_id):
@@ -456,7 +499,7 @@ def register_routes(app):
             .options(
                 joinedload(Combinacion.platos)
                 .joinedload(Plato.plato_ingredientes) # <--
-                .joinedload(PlatoIngrediente.ingredientes),
+                .joinedload(PlatoIngrediente.ingredientes), # <--
                 joinedload(Combinacion.ensaladas),
                 with_loader_criteria(PlatoIngrediente, PlatoIngrediente.user_id == user_id)
             )
@@ -467,14 +510,7 @@ def register_routes(app):
         
         porciones = [porcion.porciones for porcion in combinaciones_obj]
         
-        def map_porciones(porciones):
-            mapeo = {1: 0.3333333333333333, 2: 0.6666666666666666, 3: 1, 4: 1.3333333333333333, 5: 1.6666666666666666, 6: 2}
-            return list(map(lambda p: mapeo.get(p, p), porciones))
-
         multiplicador = map_porciones(porciones)
-
-        print(porciones)
-        print(multiplicador)
         
         dias_data = []
         for i, combinacion in enumerate(combinaciones_obj):
@@ -482,13 +518,19 @@ def register_routes(app):
     
             if combinacion.platos:
                 for plato_ingrediente in combinacion.platos.plato_ingredientes: # -->
-                    ingrediente = plato_ingrediente.ingredientes
+                    ingrediente = plato_ingrediente.ingredientes # -->
+
+                    cantidad = mult_cantidad_ingrediente(plato_ingrediente.cantidad, multiplicador[i], plato_ingrediente.unidades.unidad)
+                    
+                    if plato_ingrediente.unidades.unidad == 'g':
+                        cantidad = redondear_a_decena_inferior(cantidad)
+                                        
                     plato_ingredientes.append({
                         "nombre": ingrediente.nombre,
-                        "cantidad": plato_ingrediente.cantidad * multiplicador[i], # aqui habría que multiplicar por la porción
+                        "cantidad": formatear_cantidad(cantidad), 
                         "unidad": plato_ingrediente.unidades.unidad
                     })
-                    print(plato_ingredientes)
+                    
             dia_info = {
                 "dia": dias_con_fechas[i]["dia"],  
                 "fecha": dias_con_fechas[i]["fecha"], 
@@ -498,7 +540,8 @@ def register_routes(app):
                 "plato_ingredientes": plato_ingredientes,
                 "plato_preparacion": combinacion.platos.preparacion if combinacion.platos else None,
                 "id": combinacion.id,
-                "plato_id": combinacion.platos.id
+                "plato_id": combinacion.platos.id,
+                "porciones": combinacion.porciones
             }
             dias_data.append(dia_info)
         

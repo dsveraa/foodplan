@@ -20,6 +20,14 @@
                             <option value="{{ plato.id }}" {% if plato.id == combinacion.plato_actual_id %}selected{% endif %}>{{ plato.nombre }}</option>
                         {% endfor %}
                     </select>
+                    <label for="porciones">Porciones:</label>
+                    <select class="form-control" name="porciones" id="porciones">
+                        {% for porcion in posibles_porciones %}
+                            <option value="{{ porcion }}" {% if porcion == combinacion.porciones %}selected{% endif %}>
+                                {{ porcion }}
+                            </option>
+                        {% endfor %}
+                    </select>
                     <label for="ensalada">Ensalada:</label>
                     <select class="form-control" name="ensalada_id" id="ensalada">
                         {% for ensalada in ensaladas %}
