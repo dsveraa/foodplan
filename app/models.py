@@ -31,6 +31,7 @@ class Combinacion(db.Model):
     ensalada_id = Column(Integer, ForeignKey('ensaladas.id'), nullable=True)
     fecha = Column(DateTime)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    porciones = Column(Integer, default=3)
 
     platos = relationship("Plato", back_populates="combinaciones")
     ensaladas = relationship("Ensalada", back_populates="combinaciones")

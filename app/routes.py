@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, jsonify, session, flash
-from sqlalchemy import desc, and_
+from sqlalchemy import desc, and_, case
 from sqlalchemy.orm import joinedload, with_loader_criteria
 from collections import defaultdict
 from . import db
@@ -27,6 +27,7 @@ from app.services.helpers import (
 )
 
 from .services.decorators import moderator_required
+from typing import List, Dict
 
 def register_routes(app):
     @app.route("/logout")
@@ -440,33 +441,54 @@ def register_routes(app):
 
         user_id = session.get('user_id')
 
+        dias_ordenados = case(
+            (Combinacion.dia == "domingo", 1),
+            (Combinacion.dia == "lunes", 2),
+            (Combinacion.dia == "martes", 3),
+            (Combinacion.dia == "miércoles", 4),
+            (Combinacion.dia == "jueves", 5),
+            (Combinacion.dia == "viernes", 6),
+            (Combinacion.dia == "sábado", 7),
+        )
+
         combinaciones_obj = (
             Combinacion.query
             .options(
                 joinedload(Combinacion.platos)
-                .joinedload(Plato.plato_ingredientes)
+                .joinedload(Plato.plato_ingredientes) # <--
                 .joinedload(PlatoIngrediente.ingredientes),
                 joinedload(Combinacion.ensaladas),
                 with_loader_criteria(PlatoIngrediente, PlatoIngrediente.user_id == user_id)
             )
             .filter_by(user_id=user_id)
-            .order_by(Combinacion.id)
+            .order_by(dias_ordenados)
             .all()
         )   
+        
+        porciones = [porcion.porciones for porcion in combinaciones_obj]
+        
+        def map_porciones(porciones):
+            mapeo = {1: 0.3333333333333333, 2: 0.6666666666666666, 3: 1, 4: 1.3333333333333333, 5: 1.6666666666666666, 6: 2}
+            return list(map(lambda p: mapeo.get(p, p), porciones))
 
+        multiplicador = map_porciones(porciones)
+
+        print(porciones)
+        print(multiplicador)
         
         dias_data = []
         for i, combinacion in enumerate(combinaciones_obj):
             plato_ingredientes = []
     
             if combinacion.platos:
-                for plato_ingrediente in combinacion.platos.plato_ingredientes:
+                for plato_ingrediente in combinacion.platos.plato_ingredientes: # -->
                     ingrediente = plato_ingrediente.ingredientes
                     plato_ingredientes.append({
                         "nombre": ingrediente.nombre,
-                        "cantidad": plato_ingrediente.cantidad,
+                        "cantidad": plato_ingrediente.cantidad * multiplicador[i], # aqui habría que multiplicar por la porción
                         "unidad": plato_ingrediente.unidades.unidad
                     })
+                    print(plato_ingredientes)
             dia_info = {
                 "dia": dias_con_fechas[i]["dia"],  
                 "fecha": dias_con_fechas[i]["fecha"], 
@@ -495,7 +517,7 @@ def register_routes(app):
 
         plato, ensalada, ingredientes, preparacion, imagen = obtener_detalles_combinacion(dia_nombre_esp)
 
-        print(ingredientes)
+        # print(ingredientes)
 
         return render_template(
             "index.html",
