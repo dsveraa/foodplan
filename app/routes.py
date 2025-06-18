@@ -290,8 +290,8 @@ def register_routes(app):
             db.session.commit()
 
             from html import escape
-            escaped_datos_combinados = {key: escape(str(value)) for key, value in datos_combinados.items()}
-            return f'Datos combinados: {escaped_datos_combinados}'
+            escaped_datos_combinados = {escape(str(key)): escape(str(value)) for key, value in datos_combinados.items()}
+            return jsonify({'datos_combinados': escaped_datos_combinados})
 
         return render_template('add_ingredients.html', ingredientes=ingredientes, unidades=unidades)
    
