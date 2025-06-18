@@ -25,3 +25,7 @@ fly launch
 Set SECRETS in fly.io
 
 fly deploy
+
+from html import escape
+            escaped_datos_combinados = {key: escape(str(value)) for key, value in datos_combinados.items()}
+            return f'Datos combinados: {escaped_datos_combinados}'
