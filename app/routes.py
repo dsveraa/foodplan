@@ -32,6 +32,13 @@ from app.services.helpers import (
 from .services.decorators import moderator_required
 
 def register_routes(app):
+    # @app.route("/set_password", methods=["GET", "POST"])
+    # def set_password():
+    #     user_id = 11
+    #     user = User.query.filter_by(user_id=user_id)
+    #     new_password = request.form['new_password']
+    #     pass
+
     @app.route("/logout")
     def logout():
         session.pop("user_id", None)
